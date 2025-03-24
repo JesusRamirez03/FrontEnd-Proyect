@@ -11,6 +11,8 @@ import { lastValueFrom } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { PusherService } from '../../services/pusher/pusher.service';
+import { EchoService } from '../../services/echo/echo.service';
 
 @Component({
   selector: 'app-author-crud',
@@ -31,23 +33,28 @@ export class AuthorCrudComponent implements OnInit {
     private router: Router,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
-    private authService: AuthService
+    private authService: AuthService,
+    private pusherService: PusherService,
+    private echoService: EchoService // Inyecta el servicio EchoService
   ) {}
 
   ngOnInit(): void {
     this.userRole = this.authService.getUserRole(); // Obtener el rol del usuario
     this.userName = this.authService.getUserName(); // Obtener el nombre del usuario
     this.loadAuthors(); // Cargar los autores
+
   }
+
+
 
   // Cargar todos los autores
   async loadAuthors(): Promise<void> {
     try {
       this.allAuthors = await lastValueFrom(this.authorService.getAuthors());
-      this.activeAuthors = this.allAuthors.filter(author => author.deleted_at === null); // Autores activos
-      this.deletedAuthors = this.allAuthors.filter(author => author.deleted_at !== null); // Autores eliminados
+      this.activeAuthors = this.allAuthors.filter(author => !author.deleted_at);
+      this.deletedAuthors = this.allAuthors.filter(author => author.deleted_at);
     } catch (error) {
-      this.snackBar.open('Error al cargar autores', 'Cerrar', { duration: 3000 });
+      console.error('Error al cargar autores:', error);
     }
   }
 
