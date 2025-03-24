@@ -1,0 +1,14 @@
+<app-navbar
+  [userName]="userName"
+  (logoutEvent)="onLogout()">
+</app-navbar>
+
+<!-- Contenido principal -->
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-body">
+      <h1 class="card-title">Bienvenido, {{ userName }}</h1>
+      <p class="card-text">¡Has iniciado sesión correctamente!</p>
+    </div>
+  </div>
+</div>

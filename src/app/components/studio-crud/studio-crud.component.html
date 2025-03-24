@@ -1,0 +1,51 @@
+<app-navbar
+  [userName]="userName"
+  (logoutEvent)="onLogout()">
+</app-navbar>
+
+<div class="container">
+  <h2>Listado de Estudios</h2>
+
+  <!-- Botón para crear un estudio (solo para admin) -->
+  <button *ngIf="userRole === 'admin'" mat-raised-button color="primary" (click)="navigateToCreate()">
+    <mat-icon>add</mat-icon> Crear Nuevo Estudio
+  </button>
+
+  <!-- Estudios Activos -->
+  <h3>Estudios Activos</h3>
+  <div class="cards-container">
+    <mat-card *ngFor="let studio of activeStudios" class="green-card">
+      <mat-card-content>
+        <span class="card-title">{{ studio.name }}</span>
+      </mat-card-content>
+      <mat-card-actions *ngIf="userRole === 'admin'">
+        <button mat-icon-button color="primary" (click)="navigateToUpdate(studio.id)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="deleteStudio(studio.id)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Estudios Eliminados (solo para admin) -->
+  <div *ngIf="userRole === 'admin'">
+    <h3>Estudios Eliminados</h3>
+    <div class="cards-container">
+      <mat-card *ngFor="let studio of deletedStudios" class="red-card">
+        <mat-card-content>
+          <span class="card-title">{{ studio.name }}</span>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-icon-button color="accent" (click)="restoreStudio(studio.id)">
+            <mat-icon>restore</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="forceDeleteStudio(studio.id)">
+            <mat-icon>delete_forever</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+</div>

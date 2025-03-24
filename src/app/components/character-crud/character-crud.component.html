@@ -1,0 +1,55 @@
+<app-navbar
+  [userName]="userName"
+  (logoutEvent)="onLogout()">
+</app-navbar>
+
+<div class="container">
+  <h2>Listado de Personajes</h2>
+
+  <!-- Botón para crear un personaje (solo para admin) -->
+  <button *ngIf="userRole === 'admin'" mat-raised-button color="primary" (click)="navigateToCreate()">
+    <mat-icon>add</mat-icon> Crear Nuevo Personaje
+  </button>
+
+  <!-- Personajes Activos -->
+  <h3>Personajes Activos</h3>
+  <div class="cards-container">
+    <mat-card *ngFor="let character of activeCharacters" class="green-card">
+      <mat-card-content>
+        <span class="card-title">{{ character.name }}</span>
+        <span class="card-info">Anime: {{ character.anime?.title || 'N/A' }}</span>
+        <span class="card-info">Manga: {{ character.manga?.title || 'N/A' }}</span>
+      </mat-card-content>
+      <mat-card-actions *ngIf="userRole === 'admin'">
+        <button mat-icon-button color="primary" (click)="navigateToUpdate(character.id)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="deleteCharacter(character.id)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Personajes Eliminados (solo para admin) -->
+  <div *ngIf="userRole === 'admin'">
+    <h3>Personajes Eliminados</h3>
+    <div class="cards-container">
+      <mat-card *ngFor="let character of deletedCharacters" class="red-card">
+        <mat-card-content>
+          <span class="card-title">{{ character.name }}</span>
+          <span class="card-info">Anime: {{ character.anime?.title || 'N/A' }}</span>
+          <span class="card-info">Manga: {{ character.manga?.title || 'N/A' }}</span>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-icon-button color="accent" (click)="restoreCharacter(character.id)">
+            <mat-icon>restore</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="forceDeleteCharacter(character.id)">
+            <mat-icon>delete_forever</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+</div>

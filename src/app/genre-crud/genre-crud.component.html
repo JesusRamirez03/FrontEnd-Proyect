@@ -1,0 +1,51 @@
+<app-navbar
+  [userName]="userName"
+  (logoutEvent)="onLogout()">
+</app-navbar>
+
+<div class="container">
+  <h2>Listado de Géneros</h2>
+
+  <!-- Botón para crear un género (solo para admin) -->
+  <button *ngIf="userRole === 'admin'" mat-raised-button color="primary" (click)="navigateToCreate()">
+    <mat-icon>add</mat-icon> Crear Nuevo Género
+  </button>
+
+  <!-- Géneros Activos -->
+  <h3>Géneros Activos</h3>
+  <div class="cards-container">
+    <mat-card *ngFor="let genre of activeGenres" class="green-card">
+      <mat-card-content>
+        <span class="card-title">{{ genre.name }}</span>
+      </mat-card-content>
+      <mat-card-actions *ngIf="userRole === 'admin'">
+        <button mat-icon-button color="primary" (click)="navigateToUpdate(genre.id)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="deleteGenre(genre.id)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Géneros Eliminados (solo para admin) -->
+  <div *ngIf="userRole === 'admin'">
+    <h3>Géneros Eliminados</h3>
+    <div class="cards-container">
+      <mat-card *ngFor="let genre of deletedGenres" class="red-card">
+        <mat-card-content>
+          <span class="card-title">{{ genre.name }}</span>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-icon-button color="accent" (click)="restoreGenre(genre.id)">
+            <mat-icon>restore</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="forceDeleteGenre(genre.id)">
+            <mat-icon>delete_forever</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+</div>

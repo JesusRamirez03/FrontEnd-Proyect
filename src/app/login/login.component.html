@@ -1,0 +1,30 @@
+<!-- src/app/login/login.component.html -->
+<div class="container d-flex flex-column align-items-center justify-content-center vh-100">
+  <div class="card p-4" style="width: 100%; max-width: 400px;">
+    <h2 class="card-title text-center mb-4">Iniciar sesión</h2>
+    <form (ngSubmit)="onLogin(loginForm)" #loginForm="ngForm">
+      <!-- Correo electrónico -->
+      <div class="mb-3">
+        <label for="email" class="form-label">Correo electrónico:</label>
+        <input type="email" class="form-control" id="email" name="email" [(ngModel)]="email" required email #emailInput="ngModel">
+        <div *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)" class="text-danger">
+          <div *ngIf="emailInput.errors?.['required']">El correo electrónico es obligatorio.</div>
+          <div *ngIf="emailInput.errors?.['email']">El correo electrónico no es válido.</div>
+        </div>
+      </div>
+
+      <!-- Contraseña -->
+      <div class="mb-3">
+        <label for="password" class="form-label">Contraseña:</label>
+        <input type="password" class="form-control" id="password" name="password" [(ngModel)]="password" required #passwordInput="ngModel">
+        <div *ngIf="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched)" class="text-danger">
+          <div *ngIf="passwordInput.errors?.['required']">La contraseña es obligatoria.</div>
+        </div>
+      </div>
+
+      <!-- Botón de inicio de sesión -->
+      <button type="submit" class="btn btn-primary w-100" [disabled]="loginForm.invalid">Iniciar sesión</button>
+    </form>
+    <p class="text-center mt-3">¿No tienes una cuenta? <a routerLink="/register">Regístrate</a></p>
+  </div>
+</div>

@@ -1,0 +1,47 @@
+.container {
+    padding: 20px;
+  }
+  
+  .cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  /* Estilos para las cards de Angular Material */
+  mat-card {
+    width: 250px;
+    padding: 16px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  mat-card.green-card {
+    background-color: #e8f5e9; /* Verde claro */
+  }
+  
+  mat-card.red-card {
+    background-color: #ffebee; /* Rojo claro */
+  }
+  
+  mat-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .card-title {
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  .card-id, .card-info {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  mat-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+  }

@@ -1,0 +1,79 @@
+.container {
+  padding: 20px;
+}
+
+.cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+/* Estilos para las cards de Angular Material */
+mat-card {
+  width: 300px;
+  height: 250px; /* Altura fija */
+  padding: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Distribuye el espacio entre contenido y acciones */
+  overflow: hidden; /* Evita que el contenido se salga del card */
+}
+
+mat-card.green-card {
+  background-color: #e8f5e9; /* Verde claro */
+}
+
+mat-card.red-card {
+  background-color: #ffebee; /* Rojo claro */
+}
+
+mat-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1; /* Asegura que el contenido ocupe el espacio disponible */
+  overflow: hidden; /* Evita que el contenido se salga */
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: bold;
+  white-space: nowrap; /* Evita que el título se divida en varias líneas */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Muestra "..." si el título es demasiado largo */
+}
+
+.info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden; /* Evita que el contenido se salga */
+}
+
+.card-id, .card-info {
+  font-size: 14px;
+  color: #666;
+  white-space: nowrap; /* Evita que el texto se divida en varias líneas */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Muestra "..." si el texto es demasiado largo */
+}
+
+.synopsis-container {
+  flex-grow: 1;
+  overflow-y: auto; /* Scroll para la sinopsis */
+}
+
+.synopsis-text {
+  white-space: pre-wrap; /* Mantiene el formato del texto */
+}
+
+mat-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 0; /* Añade un poco de padding para separar las acciones del contenido */
+  border-top: 1px solid #ddd; /* Opcional: añade una línea divisoria */
+  flex-shrink: 0; /* Evita que las acciones se compriman */
+}

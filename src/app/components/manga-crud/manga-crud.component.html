@@ -1,0 +1,73 @@
+<app-navbar
+  [userName]="userName"
+  (logoutEvent)="onLogout()">
+</app-navbar>
+
+<div class="container">
+  <h2>Listado de Mangas</h2>
+
+  <!-- Botón para crear un manga (solo para admin) -->
+  <button *ngIf="userRole === 'admin'" mat-raised-button color="primary" (click)="navigateToCreate()">
+    <mat-icon>add</mat-icon> Crear Nuevo Manga
+  </button>
+
+  <!-- Mangas Activos -->
+  <h3>Mangas Activos</h3>
+  <div class="cards-container">
+    <mat-card
+      *ngFor="let manga of activeMangas"
+      class="green-card"
+      (click)="toggleExpand(manga.id)">
+      <mat-card-content>
+        <span class="card-title">{{ manga.title }}</span>
+        <div *ngIf="expandedMangaId === manga.id" class="synopsis-container">
+          <div class="synopsis-text">{{ manga.synopsis }}</div>
+        </div>
+        <div *ngIf="expandedMangaId !== manga.id" class="info-container">
+          <span class="card-info">Autor: {{ manga.author.name }}</span>
+          <span class="card-info">Géneros: {{ formatGenres(manga.genres) }}</span>
+          <span class="card-info">Fecha de Lanzamiento: {{ manga.release_date }}</span>
+        </div>
+      </mat-card-content>
+      <mat-card-actions *ngIf="userRole === 'admin'">
+        <button mat-icon-button color="primary" (click)="navigateToUpdate(manga.id); $event.stopPropagation()">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="deleteManga(manga.id); $event.stopPropagation()">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Mangas Eliminados (solo para admin) -->
+  <div *ngIf="userRole === 'admin'">
+    <h3>Mangas Eliminados</h3>
+    <div class="cards-container">
+      <mat-card
+        *ngFor="let manga of deletedMangas"
+        class="red-card"
+        (click)="toggleExpand(manga.id)">
+        <mat-card-content>
+          <span class="card-title">{{ manga.title }}</span>
+          <div *ngIf="expandedMangaId === manga.id" class="synopsis-container">
+            <div class="synopsis-text">{{ manga.synopsis }}</div>
+          </div>
+          <div *ngIf="expandedMangaId !== manga.id" class="info-container">
+            <span class="card-info">Autor: {{ manga.author.name }}</span>
+            <span class="card-info">Géneros: {{ formatGenres(manga.genres) }}</span>
+            <span class="card-info">Fecha de Lanzamiento: {{ manga.release_date }}</span>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-icon-button color="accent" (click)="restoreManga(manga.id); $event.stopPropagation()">
+            <mat-icon>restore</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="forceDeleteManga(manga.id); $event.stopPropagation()">
+            <mat-icon>delete_forever</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+</div>

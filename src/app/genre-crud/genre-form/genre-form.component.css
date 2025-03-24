@@ -1,0 +1,13 @@
+.container {
+    padding: 20px;
+  }
+  
+  .full-width {
+    width: 100%;
+  }
+  
+  .button-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }

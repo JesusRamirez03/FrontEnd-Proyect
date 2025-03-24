@@ -1,0 +1,74 @@
+<div class="container">
+    <h2>{{ isEditMode ? 'Editar Manga' : 'Crear Manga' }}</h2>
+  
+    <!-- Formulario reactivo -->
+    <form [formGroup]="mangaForm" (ngSubmit)="onSubmit()">
+      <!-- Campo Título -->
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Título</mat-label>
+        <input matInput formControlName="title" required />
+        <mat-error *ngIf="mangaForm.get('title')?.hasError('required')">
+          El título es obligatorio.
+        </mat-error>
+      </mat-form-field>
+  
+      <!-- Campo Sinopsis -->
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Sinopsis</mat-label>
+        <textarea matInput formControlName="synopsis" required></textarea>
+        <mat-error *ngIf="mangaForm.get('synopsis')?.hasError('required')">
+          La sinopsis es obligatoria.
+        </mat-error>
+      </mat-form-field>
+  
+      <!-- Campo Fecha de Lanzamiento -->
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Fecha de Lanzamiento</mat-label>
+        <input matInput type="date" formControlName="release_date" required />
+        <mat-error *ngIf="mangaForm.get('release_date')?.hasError('required')">
+          La fecha de lanzamiento es obligatoria.
+        </mat-error>
+      </mat-form-field>
+  
+      <!-- Campo Autor -->
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Autor</mat-label>
+        <select matNativeControl formControlName="author_id" required>
+          <option value="0" disabled>Selecciona un autor</option>
+          <option *ngFor="let author of authors" [value]="author.id">
+            {{ author.name }}
+          </option>
+        </select>
+        <mat-error *ngIf="mangaForm.get('author_id')?.hasError('required')">
+          El autor es obligatorio.
+        </mat-error>
+      </mat-form-field>
+  
+      <!-- Campo Géneros -->
+      <div class="full-width">
+        <mat-label>Géneros</mat-label>
+        <div *ngFor="let genre of genres" class="form-check">
+          <input
+            type="checkbox"
+            [id]="'genre-' + genre.id"
+            [checked]="isGenreSelected(genre.id)"
+            (change)="toggleGenre(genre.id)"
+          />
+          <label [for]="'genre-' + genre.id">{{ genre.name }}</label>
+        </div>
+        <mat-error *ngIf="mangaForm.get('genres')?.hasError('required')">
+          Debes seleccionar al menos un género.
+        </mat-error>
+      </div>
+  
+      <!-- Botones de acción -->
+      <div class="button-container">
+        <button mat-raised-button color="primary" type="submit">
+          {{ isEditMode ? 'Actualizar' : 'Crear' }}
+        </button>
+        <button mat-raised-button color="warn" type="button" (click)="navigateToMangaList()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>

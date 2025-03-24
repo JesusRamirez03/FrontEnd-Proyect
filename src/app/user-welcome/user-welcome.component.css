@@ -1,0 +1,23 @@
+/* Estilos para el navbar */
+.navbar {
+    margin-bottom: 20px;
+  }
+  
+  /* Estilos para la tarjeta de bienvenida */
+  .card {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .card-title {
+    font-size: 2rem;
+    margin-bottom: 20px;
+  }
+  
+  .card-text {
+    font-size: 1.2rem;
+    color: #555;
+  }

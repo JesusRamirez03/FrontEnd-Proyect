@@ -1,0 +1,73 @@
+<app-navbar
+  [userName]="userName"
+  (logoutEvent)="onLogout()">
+</app-navbar>
+
+<div class="container">
+  <h2>Listado de Animes</h2>
+
+  <!-- Botón para crear un anime (solo para admin) -->
+  <button *ngIf="userRole === 'admin'" mat-raised-button color="primary" (click)="navigateToCreate()">
+    <mat-icon>add</mat-icon> Crear Nuevo Anime
+  </button>
+
+  <!-- Animes Activos -->
+  <h3>Animes Activos</h3>
+  <div class="cards-container">
+    <mat-card
+      *ngFor="let anime of activeAnimes"
+      class="green-card"
+      (click)="toggleExpand(anime.id)">
+      <mat-card-content>
+        <span class="card-title">{{ anime.title }}</span>
+        <div *ngIf="expandedAnimeId === anime.id" class="synopsis-container">
+          <div class="synopsis-text">{{ anime.synopsis }}</div>
+        </div>
+        <div *ngIf="expandedAnimeId !== anime.id" class="info-container">
+          <span class="card-info">Estudio: {{ anime.studio.name }}</span>
+          <span class="card-info">Géneros: {{ formatGenres(anime.genres) }}</span>
+          <span class="card-info">Fecha de Lanzamiento: {{ anime.release_date }}</span>
+        </div>
+      </mat-card-content>
+      <mat-card-actions *ngIf="userRole === 'admin'">
+        <button mat-icon-button color="primary" (click)="navigateToUpdate(anime.id); $event.stopPropagation()">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="deleteAnime(anime.id); $event.stopPropagation()">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Animes Eliminados (solo para admin) -->
+  <div *ngIf="userRole === 'admin'">
+    <h3>Animes Eliminados</h3>
+    <div class="cards-container">
+      <mat-card
+        *ngFor="let anime of deletedAnimes"
+        class="red-card"
+        (click)="toggleExpand(anime.id)">
+        <mat-card-content>
+          <span class="card-title">{{ anime.title }}</span>
+          <div *ngIf="expandedAnimeId === anime.id" class="synopsis-container">
+            <div class="synopsis-text">{{ anime.synopsis }}</div>
+          </div>
+          <div *ngIf="expandedAnimeId !== anime.id" class="info-container">
+            <span class="card-info">Estudio: {{ anime.studio.name }}</span>
+            <span class="card-info">Géneros: {{ formatGenres(anime.genres) }}</span>
+            <span class="card-info">Fecha de Lanzamiento: {{ anime.release_date }}</span>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-icon-button color="accent" (click)="restoreAnime(anime.id); $event.stopPropagation()">
+            <mat-icon>restore</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="forceDeleteAnime(anime.id); $event.stopPropagation()">
+            <mat-icon>delete_forever</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+</div>
