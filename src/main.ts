@@ -21,6 +21,7 @@ import { MangaFormComponent } from './app/components/manga-crud/manga-form/manga
 import { AnimeFormComponent } from './app/components/anime-crud/anime-form/anime-form.component';
 import { CharacterFormComponent } from './app/components/character-crud/character-form/character-form.component';
 import { LogActivityComponent } from './app/components/log-activity/log-activity.component';
+import { UserAdminComponentComponent } from './app/components/user-admin-component/user-admin-component.component';
 
 
 
@@ -54,6 +55,8 @@ const routes: Routes = [
   {path: 'characters/edit/:id', component: CharacterFormComponent},
 
   { path: 'logs', component: LogActivityComponent },
+
+  { path: 'users', component: UserAdminComponentComponent},
 
   { path: '**', redirectTo: '' } 
 ];

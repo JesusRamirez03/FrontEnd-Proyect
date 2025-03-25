@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { StudioService, Studio } from '../../services/studio/studio.service';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -7,7 +7,7 @@ import { ConfirmDialogComponent } from '../author-crud/confirm-dialog/confirm-di
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { NavbarComponent } from '../navbar/navbar.component';
-import { lastValueFrom } from 'rxjs';
+import { lastValueFrom, Subscription } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,12 +19,14 @@ import { MatIconModule } from '@angular/material/icon';
   templateUrl: './studio-crud.component.html',
   styleUrls: ['./studio-crud.component.css'],
 })
-export class StudioCrudComponent implements OnInit {
+export class StudioCrudComponent implements OnInit, OnDestroy {
   allStudios: Studio[] = []; // Todos los estudios
   activeStudios: Studio[] = []; // Estudios activos
   deletedStudios: Studio[] = []; // Estudios eliminados
   userRole: string | null = ''; // Rol del usuario
   userName: string | null = ''; // Nombre del usuario
+  private studioSubscription!: Subscription;
+
 
   constructor(
     private studioService: StudioService,
@@ -38,6 +40,32 @@ export class StudioCrudComponent implements OnInit {
     this.userRole = this.authService.getUserRole(); // Obtener el rol del usuario
     this.userName = this.authService.getUserName(); // Obtener el nombre del usuario
     this.loadStudios(); // Cargar los estudios
+
+    console.log('[SSE Component] Iniciando componente y conexión SSE');
+    this.studioService.connectToStudioStream();
+
+    this.studioSubscription = this.studioService.getStudioUpdates().subscribe({
+      next: (studios) => {
+        console.log('[SSE Component] Actualización en tiempo real:', studios);
+        this.allStudios = studios;
+        this.filterStudios();
+      },
+      error: (err) => {
+        console.error('[SSE Component] Error en el stream SSE:', err);
+      },
+    });
+  }
+
+  ngOnDestroy(): void {
+    console.log('[SSE Component] Destruyendo componente, desconectando SSE');
+    this.studioSubscription.unsubscribe();
+    this.studioService.disconnect();
+  }
+
+  private filterStudios(): void {
+    console.log('[SSE Component] Filtrando estudios activos/eliminados');
+    this.activeStudios = this.allStudios.filter(studio => !studio.deleted_at);
+    this.deletedStudios = this.allStudios.filter(studio => studio.deleted_at);
   }
 
   // Cargar todos los estudios

@@ -24,6 +24,7 @@ export class AuthService {
         localStorage.setItem('token', response.access_token);
         localStorage.setItem('userName', response.user.name);
         localStorage.setItem('userRole', response.user.role); // Almacenar el rol del usuario
+        localStorage.setItem('userId', response.user.id); // Almacenar el ID del usuario
       })
     );
   }
@@ -55,4 +56,15 @@ export class AuthService {
   getUserRole(): string | null {
     return localStorage.getItem('userRole');
   }
+
+  getUserId(): number | null {
+    const userId = localStorage.getItem('userId');
+    return userId ? parseInt(userId) : null;
+  }
+    // Método para verificar si el usuario actual es admin
+    isAdmin(): boolean {
+      return this.getUserRole() === 'admin';
+    }
+
+  
 }
