@@ -1,58 +1,51 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
-import { Observable, catchError, throwError } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '../auth.service';
+import { Observable } from 'rxjs';
+import { lastValueFrom } from 'rxjs';
 
 export interface LogActivity {
-  id: number;
+  _id: string; // MongoDB usa _id en lugar de id
+  user_id: string;
+  action: string;
   description: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: Date; // Aunque timestamps está false, por si acaso
+  user?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
 }
-
 @Injectable({
   providedIn: 'root',
 })
 export class LogActivityService {
-  private apiUrl = 'http://127.0.0.1:8000/api/logs'; // URL de la API de logs
+  private apiUrl = 'http://127.0.0.1:8000/api/logs';
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
-  // Método para construir las cabeceras HTTP con el token de autenticación
   private getHeaders(): HttpHeaders {
     const token = this.authService.getToken();
-    if (!token) {
-      throw new Error('No se encontró el token de autenticación.');
-    }
     return new HttpHeaders({
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
     });
   }
 
-  // Manejo de errores HTTP
-  private handleError(error: HttpErrorResponse): Observable<never> {
-    let errorMessage = 'Ocurrió un error en la solicitud.';
-    if (error.error instanceof ErrorEvent) {
-      errorMessage = `Error: ${error.error.message}`;
-    } else {
-      errorMessage = `Código de error: ${error.status}\nMensaje: ${error.message}`;
+  getAllLogs(): Observable<LogActivity[]> {
+    return this.http.get<LogActivity[]>(this.apiUrl, { headers: this.getHeaders() });
+  }
+
+  getLogById(id: string): Observable<LogActivity> {
+    return this.http.get<LogActivity>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
+  }
+
+  async getLogs(): Promise<LogActivity[]> {
+    try {
+      return await lastValueFrom(this.getAllLogs());
+    } catch (error) {
+      console.error('Error fetching logs:', error);
+      throw error;
     }
-    console.error(errorMessage);
-    return throwError(() => new Error(errorMessage));
-  }
-
-  // Obtener todos los logs
-  getLogs(): Observable<LogActivity[]> {
-    return this.http.get<LogActivity[]>(this.apiUrl, { headers: this.getHeaders() }).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  // Obtener un log específico por ID
-  getLog(id: number): Observable<LogActivity> {
-    return this.http.get<LogActivity>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).pipe(
-      catchError(this.handleError)
-    );
   }
 }
