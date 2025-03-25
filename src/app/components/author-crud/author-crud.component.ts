@@ -43,6 +43,15 @@ export class AuthorCrudComponent implements OnInit {
     this.userName = this.authService.getUserName(); // Obtener el nombre del usuario
     this.loadAuthors(); // Cargar los autores
 
+    this.echoService.listen('authors','author.updaed', (data:any)=>{
+      console.log('Acción:', data.action);
+      console.log('ID Autor:', data.authorId);
+      this.loadAuthors();
+    });
+  }
+
+  ngOnDestroy(){
+    this.echoService.leave('authors');
   }
 
 

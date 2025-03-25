@@ -23,19 +23,16 @@ export class EchoService {
         cluster: 'us2',
         forceTLS: true,
       }),
-    });
+    })
   }
-
- 
-  
 
   // Método para escuchar un canal
   listen(channel: string, event: string, callback: (data: any) => void) {
-    this.echo.channel(channel).listen(event, callback);
+    this.echo.channel(channel).listen(event, callback)
   }
 
   // Método para dejar de escuchar un canal
   leave(channel: string) {
-    this.echo.leave(channel);
+    this.echo.leave(channel)
   }
 }

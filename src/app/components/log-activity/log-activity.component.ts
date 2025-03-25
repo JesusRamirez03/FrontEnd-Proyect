@@ -33,7 +33,6 @@ export class LogActivityComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadLogs(); // Cargar los logs
   }
 
     // Cerrar sesión
@@ -43,11 +42,5 @@ export class LogActivityComponent implements OnInit {
   }
 
   // Cargar todos los logs
-  async loadLogs(): Promise<void> {
-    try {
-      this.logs = await this.logActivityService.getLogs().toPromise();
-    } catch (error) {
-      this.snackBar.open('Error al cargar logs', 'Cerrar', { duration: 3000 });
-    }
-  }
+
 }
