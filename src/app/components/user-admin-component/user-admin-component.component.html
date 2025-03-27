@@ -1,90 +1,84 @@
+<app-navbar 
+  [userName]="userName" 
+  (logoutEvent)="onLogout()">
+</app-navbar>
+
 <div class="container">
-  <h2>Administración de Usuarios</h2>
+  <h2>Gestión de Usuarios</h2>
 
-  <mat-progress-bar *ngIf="isLoading" mode="indeterminate"></mat-progress-bar>
+  <mat-tab-group>
+    <!-- Pestaña de Usuarios Activos -->
+    <mat-tab label="Activos">
+      <div class="cards-container">
+        <mat-card *ngFor="let user of activeUsers" class="user-card">
+          <mat-card-header>
+            <mat-card-title>{{ user.name }}</mat-card-title>
+            <mat-card-subtitle>{{ user.email }}</mat-card-subtitle>
+          </mat-card-header>
 
-  <div *ngIf="!isLoading">
-    <!-- Pestañas para usuarios activos/inactivos -->
-    <mat-tab-group>
-      <mat-tab label="Usuarios Activos">
-        <div class="cards-container">
-          <mat-card *ngFor="let user of activeUsers" class="active-card" (click)="toggleExpand(user.id)">
-            <mat-card-header>
-              <mat-card-title>{{ user.name }}</mat-card-title>
-              <mat-card-subtitle>
-                <mat-icon [color]="getRoleColor(user.role)">person</mat-icon>
-                {{ user.role }}
-              </mat-card-subtitle>
-            </mat-card-header>
+          <mat-card-content>
+            <p><strong>Rol:</strong> {{ user.role }}</p>
+            <p>
+              <strong>Estado:</strong> 
+              <span class="active">Activo</span>
+            </p>
+          </mat-card-content>
 
-            <mat-card-content>
-              <div *ngIf="expandedUserId === user.id" class="user-details">
-                <p><strong>Email:</strong> {{ user.email }}</p>
-                <p><strong>Registrado:</strong> {{ user.created_at | date }}</p>
-              </div>
-              <div *ngIf="expandedUserId !== user.id" class="user-summary">
-                <p>{{ user.email }}</p>
-                <mat-icon [color]="getStatusColor(user.is_active)">
-                  {{ getStatusIcon(user.is_active) }}
-                </mat-icon>
-              </div>
-            </mat-card-content>
+          <mat-card-actions *ngIf="currentUserRole === 'admin'">
+            <button mat-icon-button [matMenuTriggerFor]="roleMenu">
+              <mat-icon>swap_horiz</mat-icon>
+            </button>
+            <mat-menu #roleMenu="matMenu">
+              <button mat-menu-item (click)="changeRole(user, 'admin')">Admin</button>
+              <button mat-menu-item (click)="changeRole(user, 'user')">User</button>
+              <button mat-menu-item (click)="changeRole(user, 'guest')">Guest</button>
+            </mat-menu>
 
-            <mat-card-actions align="end">
-              <button mat-icon-button color="primary" (click)="changeUserRole(user.id, 'admin'); $event.stopPropagation()"
-                      matTooltip="Hacer administrador">
-                <mat-icon>admin_panel_settings</mat-icon>
-              </button>
-              <button mat-icon-button color="accent" (click)="changeUserRole(user.id, 'user'); $event.stopPropagation()"
-                      matTooltip="Hacer usuario normal">
-                <mat-icon>person</mat-icon>
-              </button>
-              <button mat-icon-button color="warn" (click)="resetUserPassword(user.id); $event.stopPropagation()"
-                      matTooltip="Restablecer contraseña">
-                <mat-icon>vpn_key</mat-icon>
-              </button>
-              <button mat-icon-button color="warn" (click)="toggleUserStatus(user.id); $event.stopPropagation()"
-                      matTooltip="Desactivar usuario">
-                <mat-icon>block</mat-icon>
-              </button>
-            </mat-card-actions>
-          </mat-card>
-        </div>
-      </mat-tab>
+            <button mat-icon-button (click)="resetPassword(user.id)" matTooltip="Restablecer contraseña">
+              <mat-icon>vpn_key</mat-icon>
+            </button>
 
-      <mat-tab label="Usuarios Inactivos">
-        <div class="cards-container">
-          <mat-card *ngFor="let user of inactiveUsers" class="inactive-card" (click)="toggleExpand(user.id)">
-            <mat-card-header>
-              <mat-card-title>{{ user.name }}</mat-card-title>
-              <mat-card-subtitle>
-                <mat-icon [color]="getRoleColor(user.role)">person</mat-icon>
-                {{ user.role }}
-              </mat-card-subtitle>
-            </mat-card-header>
+            <button mat-icon-button (click)="toggleStatus(user)" matTooltip="Desactivar usuario">
+              <mat-icon>toggle_on</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </mat-tab>
 
-            <mat-card-content>
-              <div *ngIf="expandedUserId === user.id" class="user-details">
-                <p><strong>Email:</strong> {{ user.email }}</p>
-                <p><strong>Registrado:</strong> {{ user.created_at | date }}</p>
-              </div>
-              <div *ngIf="expandedUserId !== user.id" class="user-summary">
-                <p>{{ user.email }}</p>
-                <mat-icon [color]="getStatusColor(user.is_active)">
-                  {{ getStatusIcon(user.is_active) }}
-                </mat-icon>
-              </div>
-            </mat-card-content>
+    <!-- Pestaña de Usuarios Inactivos -->
+    <mat-tab label="Inactivos">
+      <div class="cards-container">
+        <mat-card *ngFor="let user of inactiveUsers" class="user-card inactive">
+          <mat-card-header>
+            <mat-card-title>{{ user.name }}</mat-card-title>
+            <mat-card-subtitle>{{ user.email }}</mat-card-subtitle>
+          </mat-card-header>
 
-            <mat-card-actions align="end">
-              <button mat-icon-button color="primary" (click)="toggleUserStatus(user.id); $event.stopPropagation()"
-                      matTooltip="Activar usuario">
-                <mat-icon>check_circle</mat-icon>
-              </button>
-            </mat-card-actions>
-          </mat-card>
-        </div>
-      </mat-tab>
-    </mat-tab-group>
-  </div>
+          <mat-card-content>
+            <p><strong>Rol:</strong> {{ user.role }}</p>
+            <p>
+              <strong>Estado:</strong> 
+              <span class="inactive">Inactivo</span>
+            </p>
+          </mat-card-content>
+
+          <mat-card-actions *ngIf="currentUserRole === 'admin'">
+            <button mat-icon-button [matMenuTriggerFor]="roleMenu">
+              <mat-icon>swap_horiz</mat-icon>
+            </button>
+            <mat-menu #roleMenu="matMenu">
+              <button mat-menu-item (click)="changeRole(user, 'admin')">Admin</button>
+              <button mat-menu-item (click)="changeRole(user, 'user')">User</button>
+              <button mat-menu-item (click)="changeRole(user, 'guest')">Guest</button>
+            </mat-menu>
+
+            <button mat-icon-button (click)="toggleStatus(user)" matTooltip="Activar usuario">
+              <mat-icon>toggle_off</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
 </div>

@@ -1,27 +1,17 @@
-import { Component, OnInit } from '@angular/core';
-import { UserService } from '../../services/user/user.service';
-import { AuthService } from '../../services/auth.service';
+import { Component, inject, OnInit } from '@angular/core';
+import { UserService, User } from '../../services/user/user.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { ConfirmDialogComponent } from '../author-crud/confirm-dialog/confirm-dialog.component';
-import { lastValueFrom } from 'rxjs';
+import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { CommonModule } from '@angular/common';
+import { NavbarComponent } from '../navbar/navbar.component';
+import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
 
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
 
 @Component({
   selector: 'app-user-admin-component',
@@ -31,8 +21,9 @@ interface User {
     MatCardModule,
     MatButtonModule,
     MatIconModule,
+    MatMenuModule,
     MatTabsModule,
-    MatProgressBarModule
+    NavbarComponent
   ],
   templateUrl: './user-admin-component.component.html',
   styleUrls: ['./user-admin-component.component.css']
@@ -41,129 +32,72 @@ export class UserAdminComponentComponent implements OnInit {
   allUsers: User[] = [];
   activeUsers: User[] = [];
   inactiveUsers: User[] = [];
-  currentUserId: number | null = null;
-  expandedUserId: number | null = null;
-  isLoading = true;
+  currentUserRole: string | null = '';
+  userName: string | null = '';
 
-  constructor(
-    private userService: UserService,
-    private authService: AuthService,
-    private snackBar: MatSnackBar,
-    private dialog: MatDialog
-  ) {}
+  private userService = inject(UserService);
+  private authService = inject(AuthService);
+  private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
 
-  async ngOnInit(): Promise<void> {
-    this.currentUserId = this.authService.getUserId();
-    await this.loadUsers();
+  ngOnInit(): void {
+    this.currentUserRole = this.authService.getUserRole();
+    this.userName = this.authService.getUserName();
+    this.loadUsers();
   }
 
-  async loadUsers(): Promise<void> {
-    this.isLoading = true;
-    try {
-      this.allUsers = await this.userService.getUsers();
-      this.activeUsers = this.allUsers.filter(user => user.is_active);
-      this.inactiveUsers = this.allUsers.filter(user => !user.is_active);
-    } catch (error) {
-      console.error('Error loading users:', error);
-      this.snackBar.open('Error al cargar usuarios', 'Cerrar', { duration: 3000 });
-      this.allUsers = [];
-      this.activeUsers = [];
-      this.inactiveUsers = [];
-    } finally {
-      this.isLoading = false;
-    }
-  }
-
-  toggleExpand(userId: number): void {
-    // Si ya está expandido, lo contraemos; si no, lo expandimos
-    this.expandedUserId = this.expandedUserId === userId ? null : userId;
-  }
-
-  async toggleUserStatus(userId: number): Promise<void> {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: { 
-        message: `¿Estás seguro de querer ${this.getUserById(userId)?.is_active ? 'desactivar' : 'activar'} este usuario?` 
+  loadUsers(): void {
+    this.userService.getUsers().subscribe({
+      next: (users: User[]) => { // <-- Fuerza el tipo
+        console.log('Usuarios en componente (next):', users);
+        this.allUsers = users;
+        this.activeUsers = users.filter(user => user.is_active);
+        this.inactiveUsers = users.filter(user => !user.is_active);
       },
-    });
-
-    dialogRef.afterClosed().subscribe(async (result) => {
-      if (result) {
-        try {
-          await this.userService.toggleUserStatus(userId);
-          this.snackBar.open('Estado del usuario actualizado', 'Cerrar', { duration: 3000 });
-          await this.loadUsers();
-        } catch (error) {
-          this.snackBar.open('Error al actualizar estado', 'Cerrar', { duration: 3000 });
-          console.error(error);
-        }
+      error: (err) => {
+        console.error('Error en componente:', err); // Debug adicional
       }
     });
   }
+  onLogout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
 
-  async resetUserPassword(userId: number): Promise<void> {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: { message: '¿Restablecer contraseña de este usuario?' }
-    });
-  
-    dialogRef.afterClosed().subscribe(async (result) => {
-      if (result) {
-        try {
-          const response = await lastValueFrom(
-            this.userService.resetUserPassword(userId, true)
-          );
-          
-          console.log('Respuesta del servidor:', response);
-          this.snackBar.open(response.message, 'Cerrar', { duration: 3000 });
-          
-        } catch (error) {
-          console.error('Error en reset password:', error);
-          this.snackBar.open('Error al restablecer contraseña', 'Cerrar', { duration: 3000 });
-        }
-      }
+  toggleStatus(user: User): void {
+    this.userService.toggleUserStatus(user.id).subscribe({
+      next: (updatedUser) => {
+        this.loadUsers(); // Recargar lista completa
+        this.snackBar.open(`Usuario ${updatedUser.is_active ? 'activado' : 'desactivado'}`, 'Cerrar', { duration: 3000 });
+      },
+      error: (err) => this.snackBar.open('Error al cambiar estado', 'Cerrar', { duration: 3000 })
     });
   }
 
-  async changeUserRole(userId: number, newRole: string): Promise<void> {
-    if (userId === this.currentUserId) {
+  resetPassword(userId: number, sendEmail: boolean = true): void {
+    this.userService.resetPassword(userId, sendEmail).subscribe({
+      next: (response) => {
+        const message = sendEmail 
+          ? 'Contraseña restablecida (enviada por correo)' 
+          : `Contraseña restablecida: ${response.new_password}`;
+        this.snackBar.open(message, 'Cerrar', { duration: 5000 });
+      },
+      error: (err) => this.snackBar.open('Error al restablecer contraseña', 'Cerrar', { duration: 3000 })
+    });
+  }
+
+  changeRole(user: User, newRole: string): void {
+    if (user.id === this.authService.getUserId()) {
       this.snackBar.open('No puedes cambiar tu propio rol', 'Cerrar', { duration: 3000 });
       return;
     }
 
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: { message: `¿Cambiar rol a "${newRole}"?` },
+    this.userService.changeUserRole(user.id, newRole).subscribe({
+      next: (updatedUser) => {
+        this.loadUsers();
+        this.snackBar.open('Rol actualizado', 'Cerrar', { duration: 3000 });
+      },
+      error: (err) => this.snackBar.open('Error al cambiar rol', 'Cerrar', { duration: 3000 })
     });
-
-    dialogRef.afterClosed().subscribe(async (result) => {
-      if (result) {
-        try {
-          await this.userService.changeUserRole(userId, newRole);
-          this.snackBar.open('Rol actualizado', 'Cerrar', { duration: 3000 });
-          await this.loadUsers();
-        } catch (error) {
-          this.snackBar.open('Error al cambiar rol', 'Cerrar', { duration: 3000 });
-          console.error(error);
-        }
-      }
-    });
-  }
-
-  private getUserById(id: number): User | undefined {
-    return this.allUsers.find(user => user.id === id);
-  }
-
-  getRoleColor(role: string): string {
-    switch (role) {
-      case 'admin': return 'primary';
-      case 'user': return 'accent';
-      default: return 'warn';
-    }
-  }
-
-  getStatusIcon(isActive: boolean): string {
-    return isActive ? 'check_circle' : 'cancel';
-  }
-
-  getStatusColor(isActive: boolean): string {
-    return isActive ? 'primary' : 'warn';
   }
 }

@@ -1,70 +1,37 @@
-<app-navbar
-  [userName]="userName"
+<app-navbar 
+  [userName]="userName" 
   (logoutEvent)="onLogout()">
 </app-navbar>
 
 <div class="container">
-  <h2>Registros de Actividad</h2>
+  <h2>Registro de Actividades</h2>
 
-  <mat-card>
-    <mat-card-content>
-      <div class="header-actions">
-        <mat-form-field appearance="outline">
-          <mat-label>Filtrar</mat-label>
-          <input matInput (keyup)="applyFilter($event)" placeholder="Ej. creación, actualización">
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
+  <mat-tab-group (selectedTabChange)="applyFilter($event.index === 0 ? 'all' : $event.tab.textLabel.toLowerCase())">
+    <mat-tab label="Todos">
+      <div class="logs-container">
+        <mat-card *ngFor="let log of filteredLogs" class="log-card">
+          <mat-card-header>
+            <mat-card-title>{{log.description}}</mat-card-title>
+            <mat-card-subtitle>
+              Acción: {{log.action | titlecase}} | 
+              Usuario: {{formatUserData(log)}}
+            </mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <p><strong>Fecha:</strong> {{formatDate(log.created_at)}}</p>
+            <p *ngIf="log.user_data?.email"><strong>Email:</strong> {{log.user_data.email}}</p>
+          </mat-card-content>
+        </mat-card>
       </div>
+    </mat-tab>
 
-      <div class="table-container">
-        <table mat-table [dataSource]="dataSource" matSort>
-          <!-- ID Column -->
-          <ng-container matColumnDef="_id">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
-            <td mat-cell *matCellDef="let log">{{formatObjectId(log._id)}}</td>
-          </ng-container>
+    <mat-tab label="Login">
+      <!-- Contenido filtrado para logs de login -->
+    </mat-tab>
 
-          <!-- User Column -->
-          <ng-container matColumnDef="user">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Usuario</th>
-            <td mat-cell *matCellDef="let log">
-              {{log.user?.name || 'Usuario ID: ' + log.user_id}}
-            </td>
-          </ng-container>
-
-          <!-- Action Column -->
-          <ng-container matColumnDef="action">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Acción</th>
-            <td mat-cell *matCellDef="let log">
-              <span [class]="'action-' + log.action.toLowerCase()">
-                {{log.action}}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Description Column -->
-          <ng-container matColumnDef="description">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Descripción</th>
-            <td mat-cell *matCellDef="let log" class="description-cell">
-              <td class="truncate-text">{{ log.description }}</td>         
-          </ng-container>
-
-          <!-- Details Column -->
-          <ng-container matColumnDef="details">
-            <th mat-header-cell *matHeaderCellDef>Detalles</th>
-            <td mat-cell *matCellDef="let log">
-              <button mat-icon-button color="primary" (click)="viewDetails(log)">
-                <mat-icon>visibility</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-
-        <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
-      </div>
-    </mat-card-content>
-  </mat-card>
+    <mat-tab label="Store">
+      <!-- Contenido filtrado para logs de creación -->
+    </mat-tab>
+  </mat-tab-group>
 </div>
