@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { AuthorService, Author } from '../../services/author/author.service';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -11,7 +11,6 @@ import { lastValueFrom } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { PusherService } from '../../services/pusher/pusher.service';
 import { EchoService } from '../../services/echo/echo.service';
 
 @Component({
@@ -21,12 +20,14 @@ import { EchoService } from '../../services/echo/echo.service';
   templateUrl: './author-crud.component.html',
   styleUrls: ['./author-crud.component.css'],
 })
-export class AuthorCrudComponent implements OnInit {
+export class AuthorCrudComponent implements OnInit, OnDestroy {
   allAuthors: Author[] = []; // Todos los autores
   activeAuthors: Author[] = []; // Autores activos
   deletedAuthors: Author[] = []; // Autores eliminados
   userRole: string | null = ''; // Rol del usuario
   userName: string | null = ''; // Nombre del usuario
+  
+
 
   constructor(
     private authorService: AuthorService,
@@ -34,24 +35,24 @@ export class AuthorCrudComponent implements OnInit {
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
     private authService: AuthService,
-    private pusherService: PusherService,
     private echoService: EchoService // Inyecta el servicio EchoService
   ) {}
 
   ngOnInit(): void {
-    this.userRole = this.authService.getUserRole(); // Obtener el rol del usuario
-    this.userName = this.authService.getUserName(); // Obtener el nombre del usuario
-    this.loadAuthors(); // Cargar los autores
-
-    this.echoService.listen('authors','author.updaed', (data:any)=>{
-      console.log('Acción:', data.action);
-      console.log('ID Autor:', data.authorId);
-      this.loadAuthors();
+    this.userRole = this.authService.getUserRole();
+    this.userName = this.authService.getUserName();
+    this.loadAuthors();
+  
+    // Suscripción al evento con logs
+    this.echoService.listen('authors', '.author.events', (data: any) => {
+      console.log('Evento "author.events" recibido en el componente:', data);
+      this.loadAuthors(); // Recargar autores
     });
   }
-
-  ngOnDestroy(){
+  
+  ngOnDestroy() {
     this.echoService.leave('authors');
+    console.log('Componente destruido, canal "authors" abandonado');
   }
 
 

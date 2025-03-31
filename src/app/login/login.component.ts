@@ -19,23 +19,21 @@ export class LoginComponent {
   constructor(private authService: AuthService, private router: Router) {}
 
   onLogin(form: NgForm) {
-    if (form.invalid) {
-      return; // No enviar el formulario si es inválido
-    }
+    if (form.invalid) return;
 
-    const credentials = {
+    this.authService.login({
       email: this.email,
       password: this.password
-    };
-
-    this.authService.login(credentials).subscribe({
-      next: (response) => {
-        console.log('Inicio de sesión exitoso:', response);
+    }).subscribe({
+      next: () => {
         this.router.navigate(['/user-welcome']);
       },
       error: (error) => {
-        console.error('Error al iniciar sesión:', error);
-        alert('Credenciales inválidas. Por favor, intenta de nuevo.');
+        if (error.status === 403) {
+          alert('Debes activar tu cuenta primero. Revisa tu correo electrónico.');
+        } else {
+          alert(error.error?.message || 'Error al iniciar sesión');
+        }
       }
     });
   }

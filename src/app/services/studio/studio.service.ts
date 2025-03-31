@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
-import { Observable, Subject, catchError, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, catchError, tap, throwError } from 'rxjs';
 import { AuthService } from '../auth.service';
 
 export interface Studio {
@@ -15,13 +15,11 @@ export interface Studio {
 export class StudioService {
   private apiUrl = 'http://127.0.0.1:8000/api/studios'; // URL de la API de estudios
 
-  private sseUrl = 'http://127.0.0.1:8000/api/studios/stream';
-  private eventSource: EventSource | null = null;
-  private studioUpdates = new Subject<Studio[]>();
 
-  constructor(private http: HttpClient, private authService: AuthService, private zone: NgZone) {
-    console.log('[SSE Service] Servicio SSE inicializado');
-  }
+  constructor(private http: HttpClient, private authService: AuthService, private zone: NgZone) { }
+
+  private studiosSubject = new BehaviorSubject<Studio[]>([]);
+  studios$ = this.studiosSubject.asObservable();
 
   // Método para construir las cabeceras HTTP con el token de autenticación
   private getHeaders(): HttpHeaders {
@@ -35,55 +33,6 @@ export class StudioService {
     });
   }
 
-  // Observable para suscribirse a actualizaciones
-  getStudioUpdates(): Observable<Studio[]> {
-    return this.studioUpdates.asObservable();
-  }
-
-  // Conexión SSE
-  connectToStudioStream(): void {
-    console.log('[SSE Service] Conectando al stream SSE...');
-    
-    this.zone.runOutsideAngular(() => {
-      this.disconnect();
-
-      this.eventSource = new EventSource(this.sseUrl);
-
-      this.eventSource.onopen = () => {
-        console.log('[SSE Service] Conexión SSE establecida');
-      };
-
-      this.eventSource.onmessage = (event) => {
-        this.zone.run(() => {
-          try {
-            const data = JSON.parse(event.data);
-            console.log('[SSE Service] Datos recibidos:', data);
-            this.studioUpdates.next(data.studios);
-          } catch (error) {
-            console.error('[SSE Service] Error al parsear datos SSE:', error);
-          }
-        });
-      };
-
-      this.eventSource.onerror = (error) => {
-        console.error('[SSE Service] Error en la conexión SSE:', error);
-        this.zone.run(() => {
-          this.disconnect();
-          console.log('[SSE Service] Intentando reconexión en 5 segundos...');
-          setTimeout(() => this.connectToStudioStream(), 5000);
-        });
-      };
-    });
-  }
-
-  // Cerrar conexión
-  disconnect(): void {
-    if (this.eventSource) {
-      console.log('[SSE Service] Cerrando conexión SSE');
-      this.eventSource.close();
-      this.eventSource = null;
-    }
-  }
 
   // Manejo de errores HTTP
   private handleError(error: HttpErrorResponse): Observable<never> {
@@ -99,8 +48,8 @@ export class StudioService {
 
   // Obtener todos los estudios (incluyendo eliminados)
   getStudios(): Observable<Studio[]> {
-    return this.http.get<Studio[]>(this.apiUrl, { headers: this.getHeaders() }).pipe(
-      catchError(this.handleError)
+    return this.http.get<Studio[]>(this.apiUrl).pipe(
+      tap(studios => this.studiosSubject.next(studios))
     );
   }
 

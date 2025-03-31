@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, NgZone } from '@angular/core';
 import { StudioService, Studio } from '../../services/studio/studio.service';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -19,14 +19,17 @@ import { MatIconModule } from '@angular/material/icon';
   templateUrl: './studio-crud.component.html',
   styleUrls: ['./studio-crud.component.css'],
 })
-export class StudioCrudComponent implements OnInit, OnDestroy {
+export class StudioCrudComponent implements OnInit {
   allStudios: Studio[] = []; // Todos los estudios
   activeStudios: Studio[] = []; // Estudios activos
   deletedStudios: Studio[] = []; // Estudios eliminados
   userRole: string | null = ''; // Rol del usuario
   userName: string | null = ''; // Nombre del usuario
-  private studioSubscription!: Subscription;
 
+  private sseUrl = 'http://127.0.0.1:8000/api/studios/stream'
+  private eventSource: EventSource | null = null
+  private zone = inject(NgZone)
+  private reconnectTimeoutId: any
 
   constructor(
     private studioService: StudioService,
@@ -40,32 +43,64 @@ export class StudioCrudComponent implements OnInit, OnDestroy {
     this.userRole = this.authService.getUserRole(); // Obtener el rol del usuario
     this.userName = this.authService.getUserName(); // Obtener el nombre del usuario
     this.loadStudios(); // Cargar los estudios
+    this.stream();
 
-    console.log('[SSE Component] Iniciando componente y conexión SSE');
-    this.studioService.connectToStudioStream();
+      // Suscribirse a cambios en el servicio
+    this.studioService.studios$.subscribe(studios => {
+      this.allStudios = studios;
+      this.updateFilteredStudios();
+  });
+  }
+  private updateFilteredStudios(): void {
+    this.activeStudios = this.allStudios.filter(studio => studio.deleted_at === null);
+    this.deletedStudios = this.allStudios.filter(studio => studio.deleted_at !== null);
+  }
 
-    this.studioSubscription = this.studioService.getStudioUpdates().subscribe({
-      next: (studios) => {
-        console.log('[SSE Component] Actualización en tiempo real:', studios);
-        this.allStudios = studios;
-        this.filterStudios();
-      },
-      error: (err) => {
-        console.error('[SSE Component] Error en el stream SSE:', err);
-      },
+
+  private stream(): void {
+    this.zone.runOutsideAngular(() => {
+      this.disconnect();
+  
+      this.eventSource = new EventSource(this.sseUrl);
+  
+      this.eventSource.onmessage = (event) => {
+        this.zone.run(() => {
+          try {
+            // Forzar la actualización de los estudios
+            this.loadStudios(); // <-- Cambiar esto
+            console.log('Evento SSE recibido, actualizando datos...');
+          } catch (error) {
+            console.error('SSE - Error al procesar datos:', error);
+          }
+        });
+      };
+  
+      this.eventSource.onerror = (error) => {
+        console.error('Error en conexión SSE:', error);
+        this.disconnect();
+        this.reconnectTimeoutId = setTimeout(() => this.stream(), 5000);
+      };
     });
   }
 
-  ngOnDestroy(): void {
-    console.log('[SSE Component] Destruyendo componente, desconectando SSE');
-    this.studioSubscription.unsubscribe();
-    this.studioService.disconnect();
+  private disconnect(): void {
+    if (this.eventSource) {
+      this.eventSource.close()
+      this.eventSource = null
+    }
+
+    if (this.reconnectTimeoutId) {
+      clearTimeout(this.reconnectTimeoutId)
+      this.reconnectTimeoutId = null
+    }
   }
 
-  private filterStudios(): void {
-    console.log('[SSE Component] Filtrando estudios activos/eliminados');
-    this.activeStudios = this.allStudios.filter(studio => !studio.deleted_at);
-    this.deletedStudios = this.allStudios.filter(studio => studio.deleted_at);
+  reconnect(): void {
+    this.stream()
+  }
+
+  ngOnDestroy(): void {
+    this.disconnect();
   }
 
   // Cargar todos los estudios

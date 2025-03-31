@@ -13,7 +13,7 @@
           <mat-card-header>
             <mat-card-title>{{log.description}}</mat-card-title>
             <mat-card-subtitle>
-              Acción: {{log.action | titlecase}} | 
+              Ruta: {{log.action | titlecase}} | 
               Usuario: {{formatUserData(log)}}
             </mat-card-subtitle>
           </mat-card-header>
@@ -24,14 +24,6 @@
           </mat-card-content>
         </mat-card>
       </div>
-    </mat-tab>
-
-    <mat-tab label="Login">
-      <!-- Contenido filtrado para logs de login -->
-    </mat-tab>
-
-    <mat-tab label="Store">
-      <!-- Contenido filtrado para logs de creación -->
     </mat-tab>
   </mat-tab-group>
 </div>

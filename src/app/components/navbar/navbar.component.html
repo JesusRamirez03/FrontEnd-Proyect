@@ -29,10 +29,10 @@
           <li class="nav-item">
             <a class="nav-link" [routerLink]="['/characters']">Personajes</a>
           </li>
-          <li class="nav-item">
+          <li class="nav-item" *ngIf="isAdmin()">
             <a class="nav-link" [routerLink]="['/logs']">Logs</a>
           </li>
-          <li class="nav-item">
+          <li class="nav-item" *ngIf="isAdmin()">
             <a class="nav-link" [routerLink]="['/users']">Users</a>
           </li>
         </ul>

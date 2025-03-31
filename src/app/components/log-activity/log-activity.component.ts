@@ -94,7 +94,28 @@ export class LogActivityComponent implements OnInit {
 
   formatDate(date: any): string {
     if (!date) return 'Fecha no disponible';
-    if (Array.isArray(date)) return new Date(date[0], date[1]-1, date[2]).toLocaleString();
-    return new Date(date).toLocaleString();
+    
+    // Caso 1: Fecha viene como objeto MongoDB { $date: string }
+    if (date && date.$date) {
+      return new Date(date.$date).toLocaleString();
+    }
+    
+    // Caso 2: Fecha viene como string ISO
+    if (typeof date === 'string') {
+      const parsedDate = new Date(date);
+      return isNaN(parsedDate.getTime()) ? 'Fecha no válida' : parsedDate.toLocaleString();
+    }
+    
+    // Caso 3: Fecha viene como array [año, mes, día, ...] (formato MongoDB alternativo)
+    if (Array.isArray(date)) {
+      return new Date(date[0], date[1] - 1, date[2]).toLocaleString();
+    }
+    
+    // Caso 4: Fecha viene como timestamp numérico
+    if (typeof date === 'number') {
+      return new Date(date).toLocaleString();
+    }
+    
+    return 'Formato de fecha no reconocido';
   }
 }

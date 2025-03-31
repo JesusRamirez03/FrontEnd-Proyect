@@ -7,32 +7,43 @@ import Pusher from 'pusher-js';
 })
 export class EchoService {
   private echo: Echo<'pusher'>
+  
 
 
   constructor() {
-    // Hacer Pusher globalmente disponible
     (window as any).Pusher = Pusher;
 
-    // Configurar Laravel Echo
     this.echo = new Echo<'pusher'>({
       broadcaster: 'pusher',
-      key: '6b4e2c91d1bec0756f1f', // Reemplaza con tu clave de Pusher
-      cluster: 'us2', // Reemplaza con tu cluster de Pusher
+      key: '1aa69849a9966b2359ee',
+      cluster: 'us2',
       forceTLS: true,
-      client: new Pusher('6b4e2c91d1bec0756f1f', { // Pasar Pusher explícitamente
+      client: new Pusher('1aa69849a9966b2359ee', {
         cluster: 'us2',
         forceTLS: true,
       }),
-    })
+    });
+
+    // Logs de conexión y errores
+    this.echo.connector.pusher.connection.bind('connected', () => {
+      console.log(' Conectado a Pusher correctamente');
+    });
+
+    this.echo.connector.pusher.connection.bind('error', (error: any) => {
+      console.error(' Error en la conexión Pusher:', error);
+    });
   }
 
-  // Método para escuchar un canal
   listen(channel: string, event: string, callback: (data: any) => void) {
-    this.echo.channel(channel).listen(event, callback)
+    console.log(`Suscrito a: ${channel} (Evento: ${event})`);
+    this.echo.channel(channel).listen(event, (data: any) => {
+      console.log('📬 Evento recibido:', { channel, event, data });
+      callback(data);
+    });
   }
 
-  // Método para dejar de escuchar un canal
   leave(channel: string) {
-    this.echo.leave(channel)
+    console.log(`Abandonando canal: ${channel}`);
+    this.echo.leave(channel);
   }
 }

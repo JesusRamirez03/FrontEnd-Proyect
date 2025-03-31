@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { catchError, Observable, tap, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -12,19 +12,27 @@ export class AuthService {
   constructor(private http: HttpClient, private router: Router) {}
 
   // Registrar un usuario
-  register(user: { name: string; email: string; password: string; password_confirmation: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, user);
+  register(user: any): Observable<any> {
+    console.log('Datos enviados:', user); // Verifica que los datos sean correctos
+    return this.http.post(`${this.apiUrl}/register`, user).pipe(
+      tap({
+        next: (response) => console.log('Respuesta del backend:', response),
+        error: (err) => console.error('Error en la petición:', err)
+      })
+    );
   }
 
   // Iniciar sesión
   login(credentials: { email: string; password: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, credentials).pipe(
       tap((response: any) => {
-        // Guardar el token, el nombre y el rol del usuario en el localStorage
         localStorage.setItem('token', response.access_token);
         localStorage.setItem('userName', response.user.name);
-        localStorage.setItem('userRole', response.user.role); // Almacenar el rol del usuario
-        localStorage.setItem('userId', response.user.id); // Almacenar el ID del usuario
+        localStorage.setItem('userRole', response.user.role);
+        localStorage.setItem('userId', response.user.id);
+      }),
+      catchError((error) => {
+        return throwError(() => error); 
       })
     );
   }

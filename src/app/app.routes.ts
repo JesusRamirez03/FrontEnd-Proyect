@@ -16,36 +16,46 @@ import { StudioFormComponent } from './components/studio-crud/studio-form/studio
 import { MangaFormComponent } from './components/manga-crud/manga-form/manga-form.component';
 import { AnimeFormComponent } from './components/anime-crud/anime-form/anime-form.component';
 import { CharacterFormComponent } from './components/character-crud/character-form/character-form.component';
+import { UserAdminComponentComponent } from './components/user-admin-component/user-admin-component.component';
+import { LogActivityComponent } from './components/log-activity/log-activity.component';
+import { noAuthGuard } from './guards/no-auth.guard';
+import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
-  { path: '', component: WelcomeComponent }, 
-  { path: 'login', component: LoginComponent}, 
-  { path: 'register', component: RegisterComponent }, 
-  { path: 'user-welcome', component: UserWelcomeComponent }, 
+  { path: '', component: WelcomeComponent },
+  { path: 'login', component: LoginComponent, canActivate: [noAuthGuard] },
+  { path: 'register', component: RegisterComponent, canActivate: [noAuthGuard] },
+  { path: 'user-welcome', component: UserWelcomeComponent, canActivate: [authGuard] },
   
-  { path: 'genre-crud', component: GenreCrudComponent }, 
-  {path: 'genres/create', component: GenreFormComponent},
-  {path: 'genres/edit/:id', component: GenreFormComponent},
+  // Rutas CRUD con protección de autenticación
+  { path: 'genre-crud', component: GenreCrudComponent, canActivate: [authGuard] },
+  { path: 'genres/create', component: GenreFormComponent, canActivate: [authGuard] },
+  { path: 'genres/edit/:id', component: GenreFormComponent, canActivate: [authGuard]},
 
-  { path: 'authors', component: AuthorCrudComponent},
-  {path: 'authors/create', component: AuthorFormComponent},
-  {path: 'authors/edit/:id', component: AuthorFormComponent},
-  
-  { path: 'studios', component: StudioCrudComponent},
-  {path: 'studios/create', component: StudioFormComponent},
-  {path: 'studios/edit/:id', component: StudioFormComponent},
+  { path: 'authors', component: AuthorCrudComponent, canActivate: [authGuard]},
+  { path: 'authors/create', component: AuthorFormComponent, canActivate: [authGuard]},
+  { path: 'authors/edit/:id', component: AuthorFormComponent, canActivate: [authGuard] },
 
-  { path: 'mangas', component: MangaCrudComponent},
-  {path: 'mangas/create', component: MangaFormComponent},
-  {path: 'mangas/edit/:id', component: MangaFormComponent},
+  { path: 'studios', component: StudioCrudComponent, canActivate: [authGuard] },
+  { path: 'studios/create', component: StudioFormComponent, canActivate: [authGuard] },
+  { path: 'studios/edit/:id', component: StudioFormComponent, canActivate: [authGuard] },
 
-  { path: 'animes', component: AnimeCrudComponent},
-  {path: 'animes/create', component: AnimeFormComponent},
-  {path: 'animes/edit/:id', component: AnimeFormComponent},
+  { path: 'mangas', component: MangaCrudComponent, canActivate: [authGuard]},
+  { path: 'mangas/create', component: MangaFormComponent, canActivate: [authGuard] },
+  { path: 'mangas/edit/:id', component: MangaFormComponent, canActivate: [authGuard] },
 
-  { path: 'characters', component: CharacterCrudComponent},
-  {path: 'characters/create', component: CharacterFormComponent},
-  {path: 'characters/edit/:id', component: CharacterFormComponent},
+  { path: 'animes', component: AnimeCrudComponent, canActivate: [authGuard] },
+  { path: 'animes/create', component: AnimeFormComponent, canActivate: [authGuard] },
+  { path: 'animes/edit/:id', component: AnimeFormComponent, canActivate: [authGuard] },
 
-  { path: '**', redirectTo: '' } 
+  { path: 'characters', component: CharacterCrudComponent, canActivate: [authGuard] },
+  { path: 'characters/create', component: CharacterFormComponent, canActivate: [authGuard] },
+  { path: 'characters/edit/:id', component: CharacterFormComponent, canActivate: [authGuard] },
+
+  // Rutas de admin con protección adicional
+  { path: 'logs', component: LogActivityComponent, canActivate: [adminGuard] },
+  { path: 'users', component: UserAdminComponentComponent, canActivate: [adminGuard] },
+
+  { path: '**', redirectTo: '' } // Ruta comodín para 404
 ];
