@@ -11,7 +11,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
-
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'; 
 
 @Component({
   selector: 'app-user-admin-component',
@@ -23,7 +23,8 @@ import { Router } from '@angular/router';
     MatIconModule,
     MatMenuModule,
     MatTabsModule,
-    NavbarComponent
+    NavbarComponent,
+    MatProgressSpinnerModule
   ],
   templateUrl: './user-admin-component.component.html',
   styleUrls: ['./user-admin-component.component.css']
@@ -34,6 +35,11 @@ export class UserAdminComponentComponent implements OnInit {
   inactiveUsers: User[] = [];
   currentUserRole: string | null = '';
   userName: string | null = '';
+  currentPage: number = 1;
+  itemsPerPage: number = 10;
+  totalItems: number = 0;
+  totalPages: number = 0;
+  loading: boolean = false; // Nueva propiedad para controlar carga
 
   private userService = inject(UserService);
   private authService = inject(AuthService);
@@ -47,17 +53,43 @@ export class UserAdminComponentComponent implements OnInit {
   }
 
   loadUsers(): void {
-    this.userService.getUsers().subscribe({
-      next: (users: User[]) => { // <-- Fuerza el tipo
-        console.log('Usuarios en componente (next):', users);
-        this.allUsers = users;
-        this.activeUsers = users.filter(user => user.is_active);
-        this.inactiveUsers = users.filter(user => !user.is_active);
+    this.loading = true; // Activar spinner
+    
+    this.userService.getUsers(this.currentPage, this.itemsPerPage).subscribe({
+      next: (response) => {
+        this.allUsers = response.users;
+        this.activeUsers = response.users.filter(user => user.is_active);
+        this.inactiveUsers = response.users.filter(user => !user.is_active);
+        this.totalItems = response.pagination.total;
+        this.totalPages = response.pagination.last_page;
+        this.loading = false; // Desactivar spinner
       },
       error: (err) => {
-        console.error('Error en componente:', err); // Debug adicional
+        console.error('Error al cargar usuarios:', err);
+        this.loading = false; // Desactivar spinner incluso en error
       }
     });
+  }
+  // Métodos para cambiar página
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.loadUsers();
+    }
+  }
+  
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.loadUsers();
+    }
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.loadUsers();
+    }
   }
   onLogout(): void {
     this.authService.logout();

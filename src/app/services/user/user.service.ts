@@ -13,6 +13,17 @@ export interface User {
   updated_at?: string;
 }
 
+// En user.service.ts
+export interface PaginatedUsers {
+  users: User[];
+  pagination: {
+    total: number;
+    per_page: number;
+    current_page: number;
+    last_page: number;
+  };
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -40,20 +51,17 @@ export class UserService {
     return throwError(() => new Error(errorMessage));
   }
 
-  getUsers(): Observable<User[]> {
-    return this.http.get<{ users: User[] }>(this.apiUrl, { headers: this.getHeaders() }).pipe(
-      map(response => {
-        // Extrae la propiedad 'users' del response
-        const users = response.users || [];
-        console.log('Usuarios extraídos:', users); // Debug
-        return users;
-      }),
-      catchError(error => {
-        console.error('Error al obtener usuarios:', error);
-        return of([]); // Devuelve array vacío en caso de error
-      })
-    );
-  }
+// En user.service.ts
+getUsers(page: number = 1, perPage: number = 10): Observable<PaginatedUsers> {
+  const params = { page: page.toString(), per_page: perPage.toString() };
+  
+  return this.http.get<PaginatedUsers>(this.apiUrl, { 
+    headers: this.getHeaders(),
+    params: params 
+  }).pipe(
+    catchError(this.handleError)
+  );
+}
   // Cambiar estado de usuario (activar/desactivar)
   toggleUserStatus(userId: number): Observable<User> {
     return this.http.put<User>(`${this.apiUrl}/${userId}/toggle-status`, {}, { 

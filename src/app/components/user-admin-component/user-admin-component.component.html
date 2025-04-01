@@ -6,7 +6,19 @@
 <div class="container">
   <h2>Gestión de Usuarios</h2>
 
-  <mat-tab-group>
+  <!-- Spinner de carga -->
+  <div *ngIf="loading" class="loading-overlay">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando usuarios...</p>
+  </div>
+
+  <!-- Mensaje cuando no hay usuarios -->
+  <div *ngIf="!loading && totalItems === 0" class="no-items-message">
+    <mat-icon>group_off</mat-icon>
+    <h3>No hay usuarios registrados</h3>
+  </div>
+
+  <mat-tab-group *ngIf="!loading && totalItems > 0">
     <!-- Pestaña de Usuarios Activos -->
     <mat-tab label="Activos">
       <div class="cards-container">
@@ -81,4 +93,35 @@
       </div>
     </mat-tab>
   </mat-tab-group>
+
+  <!-- Controles de paginación -->
+  <div class="pagination-controls" *ngIf="totalItems > itemsPerPage">
+    <button mat-stroked-button 
+            (click)="goToPage(1)" 
+            [disabled]="currentPage === 1">
+      <mat-icon>first_page</mat-icon>
+    </button>
+    
+    <button mat-stroked-button 
+            (click)="prevPage()" 
+            [disabled]="currentPage === 1">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+
+    <span class="page-info">
+      Página {{ currentPage }} de {{ totalPages }} (Total: {{ totalItems }})
+    </span>
+
+    <button mat-stroked-button 
+            (click)="nextPage()" 
+            [disabled]="currentPage === totalPages">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+
+    <button mat-stroked-button 
+            (click)="goToPage(totalPages)" 
+            [disabled]="currentPage === totalPages">
+      <mat-icon>last_page</mat-icon>
+    </button>
+  </div>
 </div>
