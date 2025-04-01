@@ -12,6 +12,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { Subscription } from 'rxjs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'; 
+import { MatTabsModule } from '@angular/material/tabs';
 
 export interface Genre {
   id: number;
@@ -28,6 +30,8 @@ export interface Genre {
     MatIconModule,
     MatButtonModule,
     MatCardModule,
+    MatProgressSpinnerModule,
+    MatTabsModule
   ],
   templateUrl: './genre-crud.component.html',
   styleUrls: ['./genre-crud.component.css'],
@@ -39,6 +43,13 @@ export class GenreCrudComponent implements OnInit, OnDestroy {
   userRole: string | null = '';
   userName: string | null = '';
   private pollingSubscription!: Subscription;
+
+  currentPage: number = 1;
+  itemsPerPage: number = 10;
+  totalItems: number = 0;
+  totalPages: number = 0;
+  loading: boolean = true;
+
 
   // Inyección de dependencias con inject()
   private genreService = inject(GenreService);
@@ -55,21 +66,24 @@ export class GenreCrudComponent implements OnInit, OnDestroy {
 
   // Iniciar polling para obtener géneros periódicamente
   startPolling(): void {
-    const intervalTime = 5000; // Intervalo de 5 segundos
+    const intervalTime = 5000;
     this.pollingSubscription = this.genreService
-      .getGenresWithPolling(intervalTime)
+      .getGenresWithPolling(intervalTime, this.currentPage)
       .subscribe({
-        next: (genres) => {
-          this.allGenres = genres;
-          this.activeGenres = this.allGenres.filter((genre) => !genre.deleted_at);
-          this.deletedGenres = this.allGenres.filter((genre) => genre.deleted_at);
+        next: (response) => {
+          this.allGenres = response.genres; // response.genres ya es Genre[]
+          this.activeGenres = this.allGenres.filter(g => !g.deleted_at);
+          this.deletedGenres = this.allGenres.filter(g => g.deleted_at);
+          this.totalItems = response.pagination.total;
+          this.totalPages = response.pagination.last_page;
+          this.loading = false;
         },
         error: (error) => {
+          this.loading = false;
           this.snackBar.open('Error al cargar géneros', 'Cerrar', { duration: 3000 });
-        },
+        }
       });
   }
-
   // Navegar a la página de creación de género
   navigateToCreate(): void {
     this.router.navigate(['/genres/create']);
@@ -138,11 +152,35 @@ export class GenreCrudComponent implements OnInit, OnDestroy {
   // Cargar géneros manualmente (opcional)
   async loadGenres(): Promise<void> {
     try {
-      this.allGenres = await lastValueFrom(this.genreService.getGenres());
-      this.activeGenres = this.allGenres.filter((genre) => !genre.deleted_at);
-      this.deletedGenres = this.allGenres.filter((genre) => genre.deleted_at);
+      const response = await lastValueFrom(this.genreService.getGenres(this.currentPage, this.itemsPerPage));
+      this.allGenres = response.genres; // Asignar response.genres que es Genre[]
+      this.activeGenres = this.allGenres.filter(g => !g.deleted_at);
+      this.deletedGenres = this.allGenres.filter(g => g.deleted_at);
+      this.totalItems = response.pagination.total;
+      this.totalPages = response.pagination.last_page;
     } catch (error) {
       this.snackBar.open('Error al cargar géneros', 'Cerrar', { duration: 3000 });
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.loadGenres();
+    }
+  }
+  
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.loadGenres();
+    }
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.loadGenres();
     }
   }
 

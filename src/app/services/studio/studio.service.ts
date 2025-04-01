@@ -9,6 +9,16 @@ export interface Studio {
   deleted_at?: string | null; // Para manejar soft delete
 }
 
+export interface PaginatedStudios {
+  studios: Studio[];
+  pagination: {
+    total: number;
+    per_page: number;
+    current_page: number;
+    last_page: number;
+  };
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -47,9 +57,18 @@ export class StudioService {
   }
 
   // Obtener todos los estudios (incluyendo eliminados)
-  getStudios(): Observable<Studio[]> {
-    return this.http.get<Studio[]>(this.apiUrl).pipe(
-      tap(studios => this.studiosSubject.next(studios))
+  getStudios(page: number = 1, perPage: number = 10): Observable<PaginatedStudios> {
+    const params = { 
+      page: page.toString(), 
+      per_page: perPage.toString() 
+    };
+    
+    return this.http.get<PaginatedStudios>(this.apiUrl, { 
+      headers: this.getHeaders(),
+      params: params 
+    }).pipe(
+      tap(response => this.studiosSubject.next(response.studios)),
+      catchError(this.handleError)
     );
   }
 

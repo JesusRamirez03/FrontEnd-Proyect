@@ -1,51 +1,77 @@
-<app-navbar
-  [userName]="userName"
-  (logoutEvent)="onLogout()">
-</app-navbar>
+<app-navbar [userName]="userName" (logoutEvent)="onLogout()"></app-navbar>
 
 <div class="container">
-  <h2>Listado de Estudios</h2>
+  <h2>Gestión de Estudios</h2>
 
-  <!-- Botón para crear un estudio (solo para admin) -->
-  <button *ngIf="userRole === 'admin'" mat-raised-button color="primary" (click)="navigateToCreate()">
-    <mat-icon>add</mat-icon> Crear Nuevo Estudio
-  </button>
-
-  <!-- Estudios Activos -->
-  <h3>Estudios Activos</h3>
-  <div class="cards-container">
-    <mat-card *ngFor="let studio of activeStudios" class="green-card">
-      <mat-card-content>
-        <span class="card-title">{{ studio.name }}</span>
-      </mat-card-content>
-      <mat-card-actions *ngIf="userRole === 'admin'">
-        <button mat-icon-button color="primary" (click)="navigateToUpdate(studio.id)">
-          <mat-icon>edit</mat-icon>
-        </button>
-        <button mat-icon-button color="warn" (click)="deleteStudio(studio.id)">
-          <mat-icon>delete</mat-icon>
-        </button>
-      </mat-card-actions>
-    </mat-card>
+  <!-- Spinner -->
+  <div *ngIf="loading" class="loading-overlay">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando estudios...</p>
   </div>
 
-  <!-- Estudios Eliminados (solo para admin) -->
-  <div *ngIf="userRole === 'admin'">
-    <h3>Estudios Eliminados</h3>
-    <div class="cards-container">
-      <mat-card *ngFor="let studio of deletedStudios" class="red-card">
-        <mat-card-content>
-          <span class="card-title">{{ studio.name }}</span>
-        </mat-card-content>
-        <mat-card-actions>
-          <button mat-icon-button color="accent" (click)="restoreStudio(studio.id)">
-            <mat-icon>restore</mat-icon>
-          </button>
-          <button mat-icon-button color="warn" (click)="forceDeleteStudio(studio.id)">
-            <mat-icon>delete_forever</mat-icon>
-          </button>
-        </mat-card-actions>
-      </mat-card>
-    </div>
+  <!-- Botón crear -->
+  <button *ngIf="userRole === 'admin'" mat-raised-button color="primary" (click)="navigateToCreate()">
+    <mat-icon>add</mat-icon> Nuevo Estudio
+  </button>
+
+  <mat-tab-group *ngIf="!loading && totalItems > 0">
+    <!-- Pestaña Activos -->
+    <mat-tab label="Activos ({{activeStudios.length}})">
+      <div class="cards-grid">
+        <mat-card *ngFor="let studio of activeStudios" class="studio-card active">
+          <mat-card-content>
+            <div class="studio-name">{{ studio.name }}</div>
+          </mat-card-content>
+          <mat-card-actions *ngIf="userRole === 'admin'">
+            <button mat-icon-button (click)="navigateToUpdate(studio.id)" matTooltip="Editar">
+              <mat-icon color="primary">edit</mat-icon>
+            </button>
+            <button mat-icon-button (click)="deleteStudio(studio.id)" matTooltip="Eliminar">
+              <mat-icon color="warn">delete</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- Pestaña Eliminados -->
+    <mat-tab *ngIf="userRole === 'admin'" label="Eliminados ({{deletedStudios.length}})">
+      <div class="cards-grid">
+        <mat-card *ngFor="let studio of deletedStudios" class="studio-card deleted">
+          <mat-card-content>
+            <div class="studio-name">{{ studio.name }}</div>
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-icon-button (click)="restoreStudio(studio.id)" matTooltip="Restaurar">
+              <mat-icon color="accent">restore</mat-icon>
+            </button>
+            <button mat-icon-button (click)="forceDeleteStudio(studio.id)" matTooltip="Eliminar permanentemente">
+              <mat-icon color="warn">delete_forever</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+
+  <!-- Paginación -->
+  <div class="pagination-controls" *ngIf="totalItems > itemsPerPage">
+    <button mat-stroked-button (click)="goToPage(1)" [disabled]="currentPage === 1">
+      <mat-icon>first_page</mat-icon>
+    </button>
+    <button mat-stroked-button (click)="prevPage()" [disabled]="currentPage === 1">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    
+    <span class="page-info">
+      Página {{ currentPage }} de {{ totalPages }} (Total: {{ totalItems }})
+    </span>
+
+    <button mat-stroked-button (click)="nextPage()" [disabled]="currentPage === totalPages">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+    <button mat-stroked-button (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages">
+      <mat-icon>last_page</mat-icon>
+    </button>
   </div>
 </div>

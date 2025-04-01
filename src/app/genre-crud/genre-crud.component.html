@@ -1,51 +1,77 @@
-<app-navbar
-  [userName]="userName"
-  (logoutEvent)="onLogout()">
-</app-navbar>
+<app-navbar [userName]="userName" (logoutEvent)="onLogout()"></app-navbar>
 
 <div class="container">
-  <h2>Listado de Géneros</h2>
+  <h2>Gestión de Géneros</h2>
 
-  <!-- Botón para crear un género (solo para admin) -->
+  <!-- Botón crear -->
   <button *ngIf="userRole === 'admin'" mat-raised-button color="primary" (click)="navigateToCreate()">
-    <mat-icon>add</mat-icon> Crear Nuevo Género
+    <mat-icon>add</mat-icon> Nuevo Género
   </button>
 
-  <!-- Géneros Activos -->
-  <h3>Géneros Activos</h3>
-  <div class="cards-container">
-    <mat-card *ngFor="let genre of activeGenres" class="green-card">
-      <mat-card-content>
-        <span class="card-title">{{ genre.name }}</span>
-      </mat-card-content>
-      <mat-card-actions *ngIf="userRole === 'admin'">
-        <button mat-icon-button color="primary" (click)="navigateToUpdate(genre.id)">
-          <mat-icon>edit</mat-icon>
-        </button>
-        <button mat-icon-button color="warn" (click)="deleteGenre(genre.id)">
-          <mat-icon>delete</mat-icon>
-        </button>
-      </mat-card-actions>
-    </mat-card>
+  <!-- Spinner -->
+  <div *ngIf="loading" class="loading-overlay">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando géneros...</p>
   </div>
 
-  <!-- Géneros Eliminados (solo para admin) -->
-  <div *ngIf="userRole === 'admin'">
-    <h3>Géneros Eliminados</h3>
-    <div class="cards-container">
-      <mat-card *ngFor="let genre of deletedGenres" class="red-card">
-        <mat-card-content>
-          <span class="card-title">{{ genre.name }}</span>
-        </mat-card-content>
-        <mat-card-actions>
-          <button mat-icon-button color="accent" (click)="restoreGenre(genre.id)">
-            <mat-icon>restore</mat-icon>
-          </button>
-          <button mat-icon-button color="warn" (click)="forceDeleteGenre(genre.id)">
-            <mat-icon>delete_forever</mat-icon>
-          </button>
-        </mat-card-actions>
-      </mat-card>
-    </div>
+  <mat-tab-group *ngIf="!loading && totalItems > 0">
+    <!-- Pestaña Activos -->
+    <mat-tab label="Activos ({{activeGenres.length}})">
+      <div class="cards-grid">
+        <mat-card *ngFor="let genre of activeGenres" class="genre-card active">
+          <mat-card-content>
+            <div class="genre-name">{{ genre.name }}</div>
+          </mat-card-content>
+          <mat-card-actions *ngIf="userRole === 'admin'">
+            <button mat-icon-button (click)="navigateToUpdate(genre.id)" matTooltip="Editar">
+              <mat-icon color="primary">edit</mat-icon>
+            </button>
+            <button mat-icon-button (click)="deleteGenre(genre.id)" matTooltip="Eliminar">
+              <mat-icon color="warn">delete</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- Pestaña Eliminados -->
+    <mat-tab *ngIf="userRole === 'admin'" label="Eliminados ({{deletedGenres.length}})">
+      <div class="cards-grid">
+        <mat-card *ngFor="let genre of deletedGenres" class="genre-card deleted">
+          <mat-card-content>
+            <div class="genre-name">{{ genre.name }}</div>
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-icon-button (click)="restoreGenre(genre.id)" matTooltip="Restaurar">
+              <mat-icon color="accent">restore</mat-icon>
+            </button>
+            <button mat-icon-button (click)="forceDeleteGenre(genre.id)" matTooltip="Eliminar permanentemente">
+              <mat-icon color="warn">delete_forever</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+
+  <!-- Paginación -->
+  <div class="pagination-controls" *ngIf="totalItems > itemsPerPage">
+    <button mat-stroked-button (click)="goToPage(1)" [disabled]="currentPage === 1">
+      <mat-icon>first_page</mat-icon>
+    </button>
+    <button mat-stroked-button (click)="prevPage()" [disabled]="currentPage === 1">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    
+    <span class="page-info">
+      Página {{ currentPage }} de {{ totalPages }} (Total: {{ totalItems }})
+    </span>
+
+    <button mat-stroked-button (click)="nextPage()" [disabled]="currentPage === totalPages">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+    <button mat-stroked-button (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages">
+      <mat-icon>last_page</mat-icon>
+    </button>
   </div>
 </div>

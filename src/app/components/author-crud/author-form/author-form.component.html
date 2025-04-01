@@ -1,22 +1,27 @@
-<div class="container">
-    <h2>{{ isEditMode ? 'Editar Autor' : 'Crear Autor' }}</h2>
-  
-    <form [formGroup]="authorForm" (ngSubmit)="onSubmit()">
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Nombre del Autor</mat-label>
-        <input matInput formControlName="name" required />
-        <mat-error *ngIf="authorForm.get('name')?.hasError('required')">
-          El nombre es obligatorio.
-        </mat-error>
-      </mat-form-field>
-  
-      <div class="button-container">
-        <button mat-raised-button color="primary" type="submit">
-          {{ isEditMode ? 'Actualizar' : 'Crear' }}
-        </button>
-        <button mat-raised-button color="warn" type="button" (click)="navigateToAuthorList()">
-          Cancelar
-        </button>
-      </div>
-    </form>
-  </div>
+<div class="form-container">
+  <h2 class="form-title">
+    <mat-icon>{{ isEditMode ? 'edit' : 'add' }}</mat-icon>
+    {{ isEditMode ? 'Editar Autor' : 'Crear Nuevo Autor' }}
+  </h2>
+
+  <form [formGroup]="authorForm" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nombre del Autor</mat-label>
+      <input matInput formControlName="name" required>
+      <mat-icon matPrefix>person</mat-icon>
+      <mat-error *ngIf="authorForm.get('name')?.hasError('required')">
+        El nombre es obligatorio
+      </mat-error>
+    </mat-form-field>
+
+    <div class="form-actions">
+      <button mat-raised-button type="button" color="warn" (click)="navigateToAuthorList()">
+        <mat-icon>cancel</mat-icon> Cancelar
+      </button>
+      <button mat-raised-button type="submit" color="primary" [disabled]="authorForm.invalid">
+        <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+        {{ isEditMode ? 'Guardar Cambios' : 'Crear Autor' }}
+      </button>
+    </div>
+  </form>
+</div>

@@ -9,6 +9,16 @@ export interface Genre {
   deleted_at?: string | null;
 }
 
+export interface PaginatedGenres {
+  genres: Genre[];
+  pagination: {
+    total: number;
+    per_page: number;
+    current_page: number;
+    last_page: number;
+  };
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -43,17 +53,26 @@ export class GenreService {
     return throwError(() => new Error(errorMessage));
   }
 
-  // Obtener todos los géneros
-  getGenres(): Observable<Genre[]> {
-    return this.http.get<Genre[]>(this.apiUrl, { headers: this.getHeaders() }).pipe(
+  // Modificar el método getGenres
+  getGenres(page: number = 1, perPage: number = 10): Observable<PaginatedGenres> {
+    const params = { 
+      page: page.toString(), 
+      per_page: perPage.toString() 
+    };
+    
+    return this.http.get<PaginatedGenres>(this.apiUrl, { 
+      headers: this.getHeaders(),
+      params: params 
+    }).pipe(
       catchError(this.handleError)
     );
   }
 
-  getGenresWithPolling(intervalTime: number): Observable<Genre[]> {
+  // Actualizar el polling
+  getGenresWithPolling(intervalTime: number, page: number = 1): Observable<PaginatedGenres> {
     return interval(intervalTime).pipe(
-      startWith(0), // Emite un valor inmediatamente al suscribirse
-      switchMap(() => this.getGenres()) // Realiza la solicitud HTTP cada intervalo
+      startWith(0),
+      switchMap(() => this.getGenres(page))
     );
   }
 

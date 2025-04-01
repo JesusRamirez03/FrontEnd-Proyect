@@ -12,11 +12,13 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { EchoService } from '../../services/echo/echo.service';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'; 
+import { MatTabsModule } from '@angular/material/tabs';
 
 @Component({
   selector: 'app-author-crud',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, MatCardModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, NavbarComponent, MatCardModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatTabsModule],
   templateUrl: './author-crud.component.html',
   styleUrls: ['./author-crud.component.css'],
 })
@@ -26,9 +28,13 @@ export class AuthorCrudComponent implements OnInit, OnDestroy {
   deletedAuthors: Author[] = []; // Autores eliminados
   userRole: string | null = ''; // Rol del usuario
   userName: string | null = ''; // Nombre del usuario
+
+  currentPage: number = 1;
+  itemsPerPage: number = 10;
+  totalItems: number = 0;
+  totalPages: number = 0;
+  loading: boolean = true;
   
-
-
   constructor(
     private authorService: AuthorService,
     private router: Router,
@@ -59,12 +65,39 @@ export class AuthorCrudComponent implements OnInit, OnDestroy {
 
   // Cargar todos los autores
   async loadAuthors(): Promise<void> {
+    this.loading = true;
     try {
-      this.allAuthors = await lastValueFrom(this.authorService.getAuthors());
-      this.activeAuthors = this.allAuthors.filter(author => !author.deleted_at);
-      this.deletedAuthors = this.allAuthors.filter(author => author.deleted_at);
+      const response = await lastValueFrom(this.authorService.getAuthors(this.currentPage, this.itemsPerPage));
+      this.allAuthors = response.authors;
+      this.activeAuthors = this.allAuthors.filter(a => !a.deleted_at);
+      this.deletedAuthors = this.allAuthors.filter(a => a.deleted_at);
+      this.totalItems = response.pagination.total;
+      this.totalPages = response.pagination.last_page;
     } catch (error) {
-      console.error('Error al cargar autores:', error);
+      this.snackBar.open('Error al cargar autores', 'Cerrar', { duration: 3000 });
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.loadAuthors();
+    }
+  }
+  
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.loadAuthors();
+    }
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.loadAuthors();
     }
   }
 

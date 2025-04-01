@@ -11,11 +11,14 @@ import { lastValueFrom, Subscription } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'; 
+import { MatTabsModule } from '@angular/material/tabs';
+
 
 @Component({
   selector: 'app-studio-crud',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, MatCardModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, NavbarComponent, MatCardModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatTabsModule],
   templateUrl: './studio-crud.component.html',
   styleUrls: ['./studio-crud.component.css'],
 })
@@ -25,6 +28,12 @@ export class StudioCrudComponent implements OnInit {
   deletedStudios: Studio[] = []; // Estudios eliminados
   userRole: string | null = ''; // Rol del usuario
   userName: string | null = ''; // Nombre del usuario
+
+  currentPage: number = 1;
+  itemsPerPage: number = 10;
+  totalItems: number = 0;
+  totalPages: number = 0;
+  loading: boolean = true;
 
   private sseUrl = 'http://127.0.0.1:8000/api/studios/stream'
   private eventSource: EventSource | null = null
@@ -105,12 +114,39 @@ export class StudioCrudComponent implements OnInit {
 
   // Cargar todos los estudios
   async loadStudios(): Promise<void> {
+    this.loading = true;
     try {
-      this.allStudios = await lastValueFrom(this.studioService.getStudios());
-      this.activeStudios = this.allStudios.filter(studio => studio.deleted_at === null); // Estudios activos
-      this.deletedStudios = this.allStudios.filter(studio => studio.deleted_at !== null); // Estudios eliminados
+      const response = await lastValueFrom(this.studioService.getStudios(this.currentPage, this.itemsPerPage));
+      this.allStudios = response.studios;
+      this.activeStudios = this.allStudios.filter(s => !s.deleted_at);
+      this.deletedStudios = this.allStudios.filter(s => s.deleted_at);
+      this.totalItems = response.pagination.total;
+      this.totalPages = response.pagination.last_page;
     } catch (error) {
       this.snackBar.open('Error al cargar estudios', 'Cerrar', { duration: 3000 });
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.loadStudios();
+    }
+  }
+  
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.loadStudios();
+    }
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.loadStudios();
     }
   }
 

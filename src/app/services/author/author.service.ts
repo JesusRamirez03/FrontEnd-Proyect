@@ -9,6 +9,16 @@ export interface Author {
   deleted_at?: string | null; // Para manejar soft delete
 }
 
+export interface PaginatedAuthors {
+  authors: Author[];
+  pagination: {
+    total: number;
+    per_page: number;
+    current_page: number;
+    last_page: number;
+  };
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -41,13 +51,20 @@ export class AuthorService {
     return throwError(() => new Error(errorMessage));
   }
 
-  getAuthors(): Observable<Author[]> {
-    return this.http.get<Author[]>(this.apiUrl, { 
-      headers: this.getHeaders() 
+  getAuthors(page: number = 1, perPage: number = 10): Observable<PaginatedAuthors> {
+    const params = { 
+      page: page.toString(), 
+      per_page: perPage.toString() 
+    };
+    
+    return this.http.get<PaginatedAuthors>(this.apiUrl, { 
+      headers: this.getHeaders(),
+      params: params 
     }).pipe(
       catchError(this.handleError)
     );
   }
+  
   // Obtener un autor específico por ID
   getAuthor(id: number): Observable<Author> {
     return this.http.get<Author>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).pipe(

@@ -1,25 +1,27 @@
-<div class="container">
-    <h2>{{ isEditMode ? 'Editar Estudio' : 'Crear Estudio' }}</h2>
-  
-    <!-- Formulario reactivo -->
-    <form [formGroup]="studioForm" (ngSubmit)="onSubmit()">
-      <!-- Campo Nombre -->
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Nombre del Estudio</mat-label>
-        <input matInput formControlName="name" required />
-        <mat-error *ngIf="studioForm.get('name')?.hasError('required')">
-          El nombre es obligatorio.
-        </mat-error>
-      </mat-form-field>
-  
-      <!-- Botones de acción -->
-      <div class="button-container">
-        <button mat-raised-button color="primary" type="submit">
-          {{ isEditMode ? 'Actualizar' : 'Crear' }}
-        </button>
-        <button mat-raised-button color="warn" type="button" (click)="navigateToStudioList()">
-          Cancelar
-        </button>
-      </div>
-    </form>
-  </div>
+<div class="form-container">
+  <h2 class="form-title">
+    <mat-icon>{{ isEditMode ? 'edit' : 'add' }}</mat-icon>
+    {{ isEditMode ? 'Editar Estudio' : 'Crear Nuevo Estudio' }}
+  </h2>
+
+  <form [formGroup]="studioForm" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nombre del Estudio</mat-label>
+      <input matInput formControlName="name" required>
+      <mat-icon matPrefix>movie</mat-icon>
+      <mat-error *ngIf="studioForm.get('name')?.hasError('required')">
+        El nombre es obligatorio
+      </mat-error>
+    </mat-form-field>
+
+    <div class="form-actions">
+      <button mat-raised-button type="button" color="warn" (click)="navigateToStudioList()">
+        <mat-icon>cancel</mat-icon> Cancelar
+      </button>
+      <button mat-raised-button type="submit" color="primary" [disabled]="studioForm.invalid">
+        <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+        {{ isEditMode ? 'Guardar Cambios' : 'Crear Estudio' }}
+      </button>
+    </div>
+  </form>
+</div>
