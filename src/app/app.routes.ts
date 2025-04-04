@@ -21,6 +21,9 @@ import { LogActivityComponent } from './components/log-activity/log-activity.com
 import { noAuthGuard } from './guards/no-auth.guard';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
+import { ProfileComponent } from './components/profile/profile.component';
+import { EditNameComponent } from './components/profile/edit-name/edit-name.component';
+import { ChancePasswordComponent } from './components/profile/chance-password/chance-password.component';
 
 export const routes: Routes = [
   { path: '', component: WelcomeComponent },
@@ -56,6 +59,10 @@ export const routes: Routes = [
   // Rutas de admin con protección adicional
   { path: 'logs', component: LogActivityComponent, canActivate: [adminGuard] },
   { path: 'users', component: UserAdminComponentComponent, canActivate: [adminGuard] },
+
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
+  { path: 'profile/edit-name', component: EditNameComponent, canActivate: [authGuard]},
+  { path: 'profile/change-password', component: ChancePasswordComponent, canActivate: [adminGuard]},
 
   { path: '**', redirectTo: '' } // Ruta comodín para 404
 ];

@@ -1,53 +1,80 @@
-<!-- src/app/register/register.component.html -->
-<div class="container d-flex flex-column align-items-center justify-content-center vh-100">
-  <div class="card p-4" style="width: 100%; max-width: 400px;">
-    <h2 class="card-title text-center mb-4">Registrarse</h2>
-    <form (ngSubmit)="onRegister(registerForm)" #registerForm="ngForm">
-      <!-- Nombre -->
-      <div class="mb-3">
-        <label for="name" class="form-label">Nombre:</label>
-        <input type="text" class="form-control" id="name" name="name" [(ngModel)]="name" required minlength="3" #nameInput="ngModel">
-        <div *ngIf="nameInput.invalid && (nameInput.dirty || nameInput.touched)" class="text-danger">
-          <div *ngIf="nameInput.errors?.['required']">El nombre es obligatorio.</div>
-          <div *ngIf="nameInput.errors?.['minlength']">El nombre debe tener al menos 3 caracteres.</div>
-        </div>
-      </div>
+<div class="mat-register-container">
+  <mat-card class="mat-register-card">
+    <mat-card-header>
+      <mat-card-title class="mat-register-title">Registrarse</mat-card-title>
+      <mat-card-subtitle class="mat-register-subtitle">Crea tu cuenta en AniManga</mat-card-subtitle>
+    </mat-card-header>
 
-      <!-- Correo electrónico -->
-      <div class="mb-3">
-        <label for="email" class="form-label">Correo electrónico:</label>
-        <input type="email" class="form-control" id="email" name="email" [(ngModel)]="email" required email #emailInput="ngModel">
-        <div *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)" class="text-danger">
-          <div *ngIf="emailInput.errors?.['required']">El correo electrónico es obligatorio.</div>
-          <div *ngIf="emailInput.errors?.['email']">El correo electrónico no es válido.</div>
-        </div>
-      </div>
+    <mat-card-content>
+      <form (ngSubmit)="onRegister(registerForm)" #registerForm="ngForm">
+        <!-- Nombre -->
+        <mat-form-field appearance="outline" class="mat-register-field">
+          <mat-label>Nombre</mat-label>
+          <input matInput type="text" id="name" name="name" 
+                 [(ngModel)]="name" required minlength="3" #nameInput="ngModel">
+          <mat-icon matSuffix>person</mat-icon>
+          <mat-hint>Mínimo 3 caracteres</mat-hint>
+          <mat-error *ngIf="nameInput.invalid && (nameInput.dirty || nameInput.touched)">
+            <span *ngIf="nameInput.errors?.['required']">El nombre es obligatorio</span>
+            <span *ngIf="nameInput.errors?.['minlength']">Debe tener al menos 3 caracteres</span>
+          </mat-error>
+        </mat-form-field>
 
-      <!-- Contraseña -->
-      <div class="mb-3">
-        <label for="password" class="form-label">Contraseña:</label>
-        <input type="password" class="form-control" id="password" name="password" [(ngModel)]="password" required minlength="6" #passwordInput="ngModel">
-        <div *ngIf="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched)" class="text-danger">
-          <div *ngIf="passwordInput.errors?.['required']">La contraseña es obligatoria.</div>
-          <div *ngIf="passwordInput.errors?.['minlength']">La contraseña debe tener al menos 6 caracteres.</div>
-        </div>
-      </div>
+        <!-- Correo electrónico -->
+        <mat-form-field appearance="outline" class="mat-register-field">
+          <mat-label>Correo electrónico</mat-label>
+          <input matInput type="email" id="email" name="email" 
+                 [(ngModel)]="email" required email #emailInput="ngModel">
+          <mat-icon matSuffix>email</mat-icon>
+          <mat-error *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)">
+            <span *ngIf="emailInput.errors?.['required']">El correo es obligatorio</span>
+            <span *ngIf="emailInput.errors?.['email']">Correo electrónico no válido</span>
+          </mat-error>
+        </mat-form-field>
 
-      <!-- Confirmar contraseña -->
-      <div class="mb-3">
-        <label for="password_confirmation" class="form-label">Confirmar contraseña:</label>
-        <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" [(ngModel)]="password_confirmation" required #passwordConfirmationInput="ngModel">
-        <div *ngIf="passwordConfirmationInput.invalid && (passwordConfirmationInput.dirty || passwordConfirmationInput.touched)" class="text-danger">
-          <div *ngIf="passwordConfirmationInput.errors?.['required']">Debes confirmar la contraseña.</div>
-        </div>
-        <div *ngIf="password !== password_confirmation && password_confirmation" class="text-danger">
-          Las contraseñas no coinciden.
-        </div>
-      </div>
+        <!-- Contraseña -->
+        <mat-form-field appearance="outline" class="mat-register-field">
+          <mat-label>Contraseña</mat-label>
+          <input matInput [type]="hidePassword ? 'password' : 'text'" id="password" name="password" 
+                 [(ngModel)]="password" required minlength="6" #passwordInput="ngModel">
+          <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword">
+            <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+          </button>
+          <mat-hint>Mínimo 6 caracteres</mat-hint>
+          <mat-error *ngIf="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched)">
+            <span *ngIf="passwordInput.errors?.['required']">La contraseña es obligatoria</span>
+            <span *ngIf="passwordInput.errors?.['minlength']">Debe tener al menos 6 caracteres</span>
+          </mat-error>
+        </mat-form-field>
 
-      <!-- Botón de registro -->
-      <button type="submit" class="btn btn-primary w-100" [disabled]="registerForm.invalid || password !== password_confirmation">Registrarse</button>
-    </form>
-    <p class="text-center mt-3">¿Ya tienes una cuenta? <a routerLink="/login">Inicia sesión</a></p>
-  </div>
+        <!-- Confirmar contraseña -->
+        <mat-form-field appearance="outline" class="mat-register-field">
+          <mat-label>Confirmar contraseña</mat-label>
+          <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" id="password_confirmation" 
+                 name="password_confirmation" [(ngModel)]="password_confirmation" required 
+                 #passwordConfirmationInput="ngModel">
+          <button mat-icon-button matSuffix (click)="hideConfirmPassword = !hideConfirmPassword">
+            <mat-icon>{{hideConfirmPassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+          </button>
+          <mat-error *ngIf="passwordConfirmationInput.invalid && (passwordConfirmationInput.dirty || passwordConfirmationInput.touched)">
+            <span *ngIf="passwordConfirmationInput.errors?.['required']">Debes confirmar la contraseña</span>
+          </mat-error>
+          <mat-error *ngIf="password !== password_confirmation && password_confirmation">
+            Las contraseñas no coinciden
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Botón de registro -->
+        <button mat-raised-button color="primary" class="mat-register-button" type="submit" 
+                [disabled]="registerForm.invalid || password !== password_confirmation || isLoading">
+          <span *ngIf="!isLoading">Registrarse</span>
+          <mat-spinner *ngIf="isLoading" diameter="24"></mat-spinner>
+        </button>
+      </form>
+
+      <div class="mat-register-login-link">
+        <p>¿Ya tienes una cuenta? <a mat-button color="primary" routerLink="/login">Inicia sesión</a></p>
+      </div>
+    </mat-card-content>
+  </mat-card>
 </div>

@@ -1,0 +1,56 @@
+.mat-login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+    padding: 1rem;
+  }
+  
+  .mat-login-card {
+    width: 100%;
+    max-width: 500px;
+    padding: 2rem;
+  }
+  
+  .mat-login-title {
+    font-size: 1.8rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .mat-login-subtitle {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .mat-login-field {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  
+  .mat-login-button {
+    width: 100%;
+    padding: 0.8rem;
+    margin-top: 1rem;
+  }
+  
+  .mat-login-forgot-password {
+    text-align: right;
+    margin-top: 0.5rem;
+  }
+  
+  .mat-login-register-link {
+    text-align: center;
+    margin-top: 1.5rem;
+  }
+  
+  .mat-login-register-link p {
+    margin-bottom: 0;
+  }
+  
+  /* Snackbar styles (add to your global styles.css) */
+  .error-snackbar {
+    background-color: #f44336;
+    color: white;
+  }

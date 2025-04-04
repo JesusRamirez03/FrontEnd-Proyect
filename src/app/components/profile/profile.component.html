@@ -1,0 +1,39 @@
+<div class="profile-container">
+    <mat-card class="profile-card">
+      <mat-card-header>
+        <mat-card-title>Mi Perfil</mat-card-title>
+      </mat-card-header>
+  
+      <mat-card-content>
+        <div *ngIf="isLoading" class="spinner-container">
+          <mat-spinner diameter="50"></mat-spinner>
+        </div>
+  
+        <div *ngIf="!isLoading && userProfile" class="profile-info">
+          <div class="profile-field">
+            <label>Nombre:</label>
+            <p>{{ userProfile.name }}</p>
+          </div>
+  
+          <div class="profile-field">
+            <label>Email:</label>
+            <p>{{ userProfile.email }}</p>
+          </div>
+  
+          <div class="profile-field">
+            <label>Rol:</label>
+            <p>{{ userProfile.role }}</p>
+          </div>
+  
+          <div class="profile-actions">
+            <button mat-raised-button color="primary" (click)="navigateToEditName()">
+              Editar Nombre
+            </button>
+            <button mat-raised-button color="accent" (click)="navigateToChangePassword()">
+              Cambiar Contraseña
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>

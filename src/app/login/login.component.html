@@ -1,30 +1,53 @@
-<!-- src/app/login/login.component.html -->
-<div class="container d-flex flex-column align-items-center justify-content-center vh-100">
-  <div class="card p-4" style="width: 100%; max-width: 400px;">
-    <h2 class="card-title text-center mb-4">Iniciar sesión</h2>
-    <form (ngSubmit)="onLogin(loginForm)" #loginForm="ngForm">
-      <!-- Correo electrónico -->
-      <div class="mb-3">
-        <label for="email" class="form-label">Correo electrónico:</label>
-        <input type="email" class="form-control" id="email" name="email" [(ngModel)]="email" required email #emailInput="ngModel">
-        <div *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)" class="text-danger">
-          <div *ngIf="emailInput.errors?.['required']">El correo electrónico es obligatorio.</div>
-          <div *ngIf="emailInput.errors?.['email']">El correo electrónico no es válido.</div>
-        </div>
-      </div>
+<div class="mat-login-container">
+  <mat-card class="mat-login-card">
+    <mat-card-header>
+      <mat-card-title class="mat-login-title">Iniciar sesión</mat-card-title>
+      <mat-card-subtitle class="mat-login-subtitle">Accede a tu cuenta de AniManga</mat-card-subtitle>
+    </mat-card-header>
 
-      <!-- Contraseña -->
-      <div class="mb-3">
-        <label for="password" class="form-label">Contraseña:</label>
-        <input type="password" class="form-control" id="password" name="password" [(ngModel)]="password" required #passwordInput="ngModel">
-        <div *ngIf="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched)" class="text-danger">
-          <div *ngIf="passwordInput.errors?.['required']">La contraseña es obligatoria.</div>
-        </div>
-      </div>
+    <mat-card-content>
+      <form (ngSubmit)="onLogin(loginForm)" #loginForm="ngForm">
+        <!-- Correo electrónico -->
+        <mat-form-field appearance="outline" class="mat-login-field">
+          <mat-label>Correo electrónico</mat-label>
+          <input matInput type="email" id="email" name="email" 
+                 [(ngModel)]="email" required email #emailInput="ngModel">
+          <mat-icon matSuffix>email</mat-icon>
+          <mat-error *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)">
+            <span *ngIf="emailInput.errors?.['required']">El correo es obligatorio</span>
+            <span *ngIf="emailInput.errors?.['email']">Correo electrónico no válido</span>
+          </mat-error>
+        </mat-form-field>
 
-      <!-- Botón de inicio de sesión -->
-      <button type="submit" class="btn btn-primary w-100" [disabled]="loginForm.invalid">Iniciar sesión</button>
-    </form>
-    <p class="text-center mt-3">¿No tienes una cuenta? <a routerLink="/register">Regístrate</a></p>
-  </div>
+        <!-- Contraseña -->
+        <mat-form-field appearance="outline" class="mat-login-field">
+          <mat-label>Contraseña</mat-label>
+          <input matInput [type]="hidePassword ? 'password' : 'text'" id="password" name="password" 
+                 [(ngModel)]="password" required #passwordInput="ngModel">
+          <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword">
+            <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+          </button>
+          <mat-error *ngIf="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched)">
+            <span *ngIf="passwordInput.errors?.['required']">La contraseña es obligatoria</span>
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Botón de inicio de sesión -->
+        <button mat-raised-button color="primary" class="mat-login-button" type="submit" 
+                [disabled]="loginForm.invalid || isLoading">
+          <span *ngIf="!isLoading">Iniciar sesión</span>
+          <mat-spinner *ngIf="isLoading" diameter="24"></mat-spinner>
+        </button>
+
+        <!-- Enlace de recuperación de contraseña -->
+        <div class="mat-login-forgot-password">
+          <a mat-button color="primary">¿Olvidaste tu contraseña?</a>
+        </div>
+      </form>
+
+      <div class="mat-login-register-link">
+        <p>¿No tienes una cuenta? <a mat-button color="primary" routerLink="/register">Regístrate</a></p>
+      </div>
+    </mat-card-content>
+  </mat-card>
 </div>

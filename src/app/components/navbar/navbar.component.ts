@@ -2,25 +2,36 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, CommonModule],
+  imports: [
+    RouterLink,
+    CommonModule,
+    MatToolbarModule,
+    MatButtonModule,
+    MatMenuModule,
+    MatIconModule
+  ],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
 })
 export class NavbarComponent {
-  @Input() userName: string | null = ''; // Recibe el nombre del usuario desde el componente padre
-  @Output() logoutEvent = new EventEmitter<void>(); // Emite un evento cuando el usuario cierra sesión
+  @Input() userName: string | null = '';
+  @Output() logoutEvent = new EventEmitter<void>();
 
-  constructor(private authService: AuthService) {} // Inyecta AuthService
+  constructor(private authService: AuthService) {}
 
-  // Método para verificar si el usuario es admin
   isAdmin(): boolean {
-    return this.authService.isAdmin(); // Usa el método que ya existe en AuthService
+    return this.authService.isAdmin();
   }
+
   onLogout(): void {
-    this.logoutEvent.emit(); // Emite el evento de cierre de sesión
+    this.logoutEvent.emit();
   }
 }

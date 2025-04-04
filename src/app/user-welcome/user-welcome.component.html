@@ -3,12 +3,18 @@
   (logoutEvent)="onLogout()">
 </app-navbar>
 
-<!-- Contenido principal -->
-<div class="container mt-4">
-  <div class="card">
-    <div class="card-body">
-      <h1 class="card-title">Bienvenido, {{ userName }}</h1>
-      <p class="card-text">¡Has iniciado sesión correctamente!</p>
-    </div>
-  </div>
-</div>
+<main class="mat-welcome-container">
+  <mat-card class="mat-welcome-card">
+    <mat-card-header>
+      <mat-card-title class="mat-welcome-title">Bienvenido, {{ userName }}</mat-card-title>
+      <mat-card-subtitle class="mat-welcome-subtitle">¡Has iniciado sesión correctamente!</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="mat-welcome-message">
+        <p>Estamos encantados de tenerte de vuelta en AniManga.</p>
+        <p>Utiliza el menú de navegación superior para explorar el contenido.</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</main>

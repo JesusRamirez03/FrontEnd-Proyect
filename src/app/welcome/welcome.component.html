@@ -1,9 +1,17 @@
-<!-- src/app/welcome/welcome.component.html -->
-<div class="container d-flex flex-column align-items-center justify-content-center vh-100">
-    <h1 class="display-4 mb-4">Bienvenido a AniManga</h1>
-    <p class="lead mb-4">¡Explora el mundo del anime y el manga!</p>
-    <div class="d-grid gap-2 col-6 mx-auto">
-      <button class="btn btn-primary btn-lg" routerLink="/register">Registrarse</button>
-      <button class="btn btn-success btn-lg" routerLink="/login">Iniciar sesión</button>
-    </div>
-  </div>
+<div class="mat-welcome-container">
+  <mat-card class="mat-welcome-card">
+    <mat-card-header>
+      <mat-card-title class="mat-welcome-title">Bienvenido a AniManga</mat-card-title>
+      <mat-card-subtitle class="mat-welcome-subtitle">¡Explora el mundo del anime y el manga!</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-actions class="mat-welcome-actions">
+      <button mat-raised-button color="primary" routerLink="/register" class="mat-welcome-button">
+        Registrarse
+      </button>
+      <button mat-raised-button color="accent" routerLink="/login" class="mat-welcome-button">
+        Iniciar sesión
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

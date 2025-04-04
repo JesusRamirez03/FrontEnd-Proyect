@@ -1,0 +1,45 @@
+.mat-register-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+    padding: 1rem;
+  }
+  
+  .mat-register-card {
+    width: 100%;
+    max-width: 500px;
+    padding: 2rem;
+  }
+  
+  .mat-register-title {
+    font-size: 1.8rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .mat-register-subtitle {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .mat-register-field {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  
+  .mat-register-button {
+    width: 100%;
+    padding: 0.8rem;
+    margin-top: 1rem;
+  }
+  
+  .mat-register-login-link {
+    text-align: center;
+    margin-top: 1.5rem;
+  }
+  
+  .mat-register-login-link p {
+    margin-bottom: 0;
+  }

@@ -1,0 +1,41 @@
+.edit-container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  .edit-card {
+    width: 100%;
+    max-width: 500px;
+    padding: 2rem;
+  }
+  
+  .edit-field {
+    width: 100%;
+    margin-bottom: 1.5rem;
+  }
+  
+  .edit-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  
+  .edit-actions button {
+    flex: 1;
+    padding: 0.5rem;
+  }
+  
+  mat-card-header {
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  mat-card-title {
+    font-size: 1.5rem;
+    font-weight: 500;
+  }
+  
+  mat-card-subtitle {
+    color: rgba(0, 0, 0, 0.6);
+  }

@@ -1,23 +1,32 @@
-/* Estilos para el navbar */
-.navbar {
-    margin-bottom: 20px;
-  }
-  
-  /* Estilos para la tarjeta de bienvenida */
-  .card {
-    max-width: 600px;
-    margin: 0 auto;
-    text-align: center;
-    padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .card-title {
-    font-size: 2rem;
-    margin-bottom: 20px;
-  }
-  
-  .card-text {
-    font-size: 1.2rem;
-    color: #555;
-  }
+.mat-welcome-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+  min-height: calc(100vh - 64px); /* Account for navbar height */
+}
+
+.mat-welcome-card {
+  width: 100%;
+  max-width: 600px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.mat-welcome-title {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.mat-welcome-subtitle {
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.mat-welcome-message {
+  margin-top: 1rem;
+  line-height: 1.6;
+}
+
+.mat-welcome-message p {
+  margin-bottom: 1rem;
+}

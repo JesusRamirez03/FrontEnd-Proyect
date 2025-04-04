@@ -69,7 +69,7 @@ export class MangaService {
 
   // Obtener la lista de autores
   getAuthors(): Observable<Author[]> {
-    return this.http.get<Author[]>(this.authorsUrl, { headers: this.getHeaders() }).pipe(
+    return this.http.get<Author[]>(`${this.authorsUrl}/all`, { headers: this.getHeaders() }).pipe(
       map((authors: Author[]) => authors.filter(author => author.deleted_at === null )),
       catchError(this.handleError)
     );
@@ -78,7 +78,6 @@ export class MangaService {
   // Obtener la lista de géneros
   getGenres(): Observable<Genre[]> {
     return this.http.get<Genre[]>(this.genresUrl, { headers: this.getHeaders() }).pipe(
-      map((genres: Genre[]) => genres.filter(genre => genre.deleted_at === null)),
       catchError(this.handleError)
     );
   }
