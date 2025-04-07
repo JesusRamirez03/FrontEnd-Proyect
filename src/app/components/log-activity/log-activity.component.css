@@ -1,23 +1,148 @@
 .container {
   padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.logs-container {
+.header {
+  margin-bottom: 20px;
+}
+
+.loading-overlay {
   display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-top: 20px;
+  justify-content: center;
+  padding: 40px;
 }
 
-.log-card {
+.no-results {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+/* Estilo de la tabla/filas */
+.logs-list {
+  margin: 20px 0;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.log-row {
+  display: flex;
+  padding: 12px 15px;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.2s;
+}
+
+.log-row:last-child {
+  border-bottom: none;
+}
+
+.log-row:hover {
   background-color: #f5f5f5;
-  transition: box-shadow 0.3s;
 }
 
-.log-card:hover {
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+.header-row {
+  background-color: #3f51b5;
+  color: white;
+  font-weight: 500;
 }
 
-mat-tab-group {
-  margin-top: 20px;
+.log-cell {
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+}
+
+.log-cell.action {
+  flex: 0 0 150px;
+}
+
+.log-cell.description {
+  flex: 1;
+}
+
+.log-cell.user {
+  flex: 0 0 200px;
+}
+
+.log-cell.date {
+  flex: 0 0 180px;
+  justify-content: flex-end;
+}
+
+/* Estilo de paginación igual a Manga CRUD */
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 25px;
+  padding: 10px 0;
+  border-top: 1px solid #e0e0e0;
+}
+
+.page-info {
+  font-size: 14px;
+  color: #666;
+}
+
+.page-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-number {
+  margin: 0 15px;
+  font-size: 14px;
+}
+
+.items-per-page {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.items-per-page select {
+  padding: 5px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .log-row {
+    flex-direction: column;
+    padding: 15px;
+  }
+  
+  .log-cell {
+    padding: 5px 0;
+    flex: 1 1 auto !important;
+    justify-content: flex-start !important;
+  }
+  
+  .pagination-controls {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .page-buttons {
+    order: 1;
+  }
+  
+  .page-info {
+    order: 2;
+  }
+  
+  .items-per-page {
+    order: 3;
+  }
 }

@@ -1,29 +1,75 @@
-<app-navbar 
-  [userName]="userName" 
-  (logoutEvent)="onLogout()">
-</app-navbar>
+<app-navbar [userName]="userName" (logoutEvent)="onLogout()"></app-navbar>
 
 <div class="container">
-  <h2>Registro de Actividades</h2>
+  <div class="header">
+    <h2>Registro de Actividades</h2>
+  </div>
 
-  <mat-tab-group (selectedTabChange)="applyFilter($event.index === 0 ? 'all' : $event.tab.textLabel.toLowerCase())">
-    <mat-tab label="Todos">
-      <div class="logs-container">
-        <mat-card *ngFor="let log of filteredLogs" class="log-card">
-          <mat-card-header>
-            <mat-card-title>{{log.description}}</mat-card-title>
-            <mat-card-subtitle>
-              Ruta: {{log.action | titlecase}} | 
-              Usuario: {{formatUserData(log)}}
-            </mat-card-subtitle>
-          </mat-card-header>
-          
-          <mat-card-content>
-            <p><strong>Fecha:</strong> {{formatDate(log.created_at)}}</p>
-            <p *ngIf="log.user_data?.email"><strong>Email:</strong> {{log.user_data.email}}</p>
-          </mat-card-content>
-        </mat-card>
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-overlay">
+    <mat-spinner diameter="50"></mat-spinner>
+  </div>
+
+  <!-- Lista de Logs -->
+  <div *ngIf="!loading" class="logs-list">
+    <!-- Mensaje cuando no hay logs -->
+    <div *ngIf="logs.length === 0" class="no-results">
+      <p>No se encontraron registros de actividad</p>
+    </div>
+
+    <!-- Fila de encabezados -->
+    <div class="log-row header-row">
+      <div class="log-cell action">Acción</div>
+      <div class="log-cell description">Descripción</div>
+      <div class="log-cell user">Usuario</div>
+      <div class="log-cell date">Fecha</div>
+    </div>
+
+    <!-- Filas de logs -->
+    <div *ngFor="let log of logs" class="log-row">
+      <div class="log-cell action">
+        <mat-icon [matTooltip]="log.action">{{ getActionIcon(log.action) }}</mat-icon>
+        <span>{{ log.action | titlecase }}</span>
       </div>
-    </mat-tab>
-  </mat-tab-group>
+      <div class="log-cell description">{{ log.description }}</div>
+      <div class="log-cell user">{{ formatUserData(log) }}</div>
+      <div class="log-cell date">{{ formatDate(log.created_at) }}</div>
+    </div>
+  </div>
+
+  <!-- Paginación estilo Manga CRUD -->
+  <div class="pagination-controls" *ngIf="totalItems > itemsPerPage">
+    <div class="page-info">
+      Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} - 
+      {{ min(currentPage * itemsPerPage, totalItems) }} de {{ totalItems }} registros
+    </div>
+    
+    <div class="page-buttons">
+      <button mat-stroked-button (click)="onPageChange(1)" [disabled]="currentPage === 1">
+        <mat-icon>first_page</mat-icon>
+      </button>
+      <button mat-stroked-button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 1">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      
+      <span class="page-number">{{ currentPage }} / {{ totalPages }}</span>
+      
+      <button mat-stroked-button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage === totalPages">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+      <button mat-stroked-button (click)="onPageChange(totalPages)" [disabled]="currentPage === totalPages">
+        <mat-icon>last_page</mat-icon>
+      </button>
+    </div>
+
+    <div class="items-per-page">
+      <span>Registros por página:</span>
+      <select [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange(itemsPerPage)">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+  </div>
 </div>
