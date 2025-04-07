@@ -1,73 +1,176 @@
-<app-navbar
-  [userName]="userName"
-  (logoutEvent)="onLogout()">
-</app-navbar>
+<app-navbar [userName]="userName" (logoutEvent)="onLogout()"></app-navbar>
 
 <div class="container">
-  <h2>Listado de Animes</h2>
+  <h2>Gestión de Animes</h2>
 
-  <!-- Botón para crear un anime (solo para admin) -->
-  <button *ngIf="userRole === 'admin'" mat-raised-button color="primary" (click)="navigateToCreate()">
-    <mat-icon>add</mat-icon> Crear Nuevo Anime
-  </button>
-
-  <!-- Animes Activos -->
-  <h3>Animes Activos</h3>
-  <div class="cards-container">
-    <mat-card
-      *ngFor="let anime of activeAnimes"
-      class="green-card"
-      (click)="toggleExpand(anime.id)">
-      <mat-card-content>
-        <span class="card-title">{{ anime.title }}</span>
-        <div *ngIf="expandedAnimeId === anime.id" class="synopsis-container">
-          <div class="synopsis-text">{{ anime.synopsis }}</div>
-        </div>
-        <div *ngIf="expandedAnimeId !== anime.id" class="info-container">
-          <span class="card-info">Estudio: {{ anime.studio.name }}</span>
-          <span class="card-info">Géneros: {{ formatGenres(anime.genres) }}</span>
-          <span class="card-info">Fecha de Lanzamiento: {{ anime.release_date }}</span>
-        </div>
-      </mat-card-content>
-      <mat-card-actions *ngIf="userRole === 'admin'">
-        <button mat-icon-button color="primary" (click)="navigateToUpdate(anime.id); $event.stopPropagation()">
-          <mat-icon>edit</mat-icon>
-        </button>
-        <button mat-icon-button color="warn" (click)="deleteAnime(anime.id); $event.stopPropagation()">
-          <mat-icon>delete</mat-icon>
-        </button>
-      </mat-card-actions>
-    </mat-card>
+  <div class="header-actions">
+    <button *ngIf="userRole === 'admin'" mat-raised-button color="primary" (click)="navigateToCreate()">
+      <mat-icon>add</mat-icon> Nuevo Anime
+    </button>
   </div>
 
-  <!-- Animes Eliminados (solo para admin) -->
-  <div *ngIf="userRole === 'admin'">
-    <h3>Animes Eliminados</h3>
-    <div class="cards-container">
-      <mat-card
-        *ngFor="let anime of deletedAnimes"
-        class="red-card"
-        (click)="toggleExpand(anime.id)">
-        <mat-card-content>
-          <span class="card-title">{{ anime.title }}</span>
-          <div *ngIf="expandedAnimeId === anime.id" class="synopsis-container">
-            <div class="synopsis-text">{{ anime.synopsis }}</div>
-          </div>
-          <div *ngIf="expandedAnimeId !== anime.id" class="info-container">
-            <span class="card-info">Estudio: {{ anime.studio.name }}</span>
-            <span class="card-info">Géneros: {{ formatGenres(anime.genres) }}</span>
-            <span class="card-info">Fecha de Lanzamiento: {{ anime.release_date }}</span>
-          </div>
-        </mat-card-content>
-        <mat-card-actions>
-          <button mat-icon-button color="accent" (click)="restoreAnime(anime.id); $event.stopPropagation()">
-            <mat-icon>restore</mat-icon>
-          </button>
-          <button mat-icon-button color="warn" (click)="forceDeleteAnime(anime.id); $event.stopPropagation()">
-            <mat-icon>delete_forever</mat-icon>
-          </button>
-        </mat-card-actions>
-      </mat-card>
-    </div>
+  <div *ngIf="loading" class="loading-overlay">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando animes...</p>
   </div>
+
+  <mat-tab-group [(selectedIndex)]="activeTabIndex" *ngIf="!loading" animationDuration="0ms">
+    <!-- Pestaña Animes Activos -->
+    <mat-tab label="Activos ({{totalActiveItems}})">
+      <div class="content-container">
+        <div *ngIf="activeAnimes.length === 0" class="no-results">
+          <mat-icon>search_off</mat-icon>
+          <p>No se encontraron animes activos</p>
+        </div>
+
+        <div class="cards-grid" *ngIf="activeAnimes.length > 0">
+          <mat-card *ngFor="let anime of activeAnimes" class="anime-card active" (click)="toggleExpand(anime.id)">
+            <mat-card-header>
+              <mat-card-title class="card-title">{{ anime.title }}</mat-card-title>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div *ngIf="expandedAnimeId === anime.id" class="synopsis-container">
+                <p class="synopsis-text">{{ anime.synopsis || 'Sin sinopsis disponible' }}</p>
+              </div>
+              
+              <div *ngIf="expandedAnimeId !== anime.id" class="info-container">
+                <div class="info-item">
+                  <mat-icon>movie</mat-icon>
+                  <span>{{ getStudioName(anime.studio_id) }}</span>
+                </div>
+                
+                <div class="info-item">
+                  <mat-icon>category</mat-icon>
+                  <span>{{ formatGenres(anime.genres) }}</span>
+                </div>
+                
+                <div class="info-item">
+                  <mat-icon>event</mat-icon>
+                  <span>{{ anime.release_date | date:'mediumDate' }}</span>
+                </div>
+              </div>
+            </mat-card-content>
+            
+            <mat-card-actions *ngIf="userRole === 'admin'">
+              <button mat-icon-button 
+                      matTooltip="Editar" 
+                      (click)="navigateToUpdate(anime.id); $event.stopPropagation()">
+                <mat-icon color="primary">edit</mat-icon>
+              </button>
+              <button mat-icon-button 
+                      matTooltip="Eliminar" 
+                      (click)="deleteAnime(anime.id); $event.stopPropagation()">
+                <mat-icon color="warn">delete</mat-icon>
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+
+        <!-- Paginador para Animes Activos -->
+        <div class="pagination-container" *ngIf="totalActiveItems > activePerPage">
+          <div class="pagination-controls">
+            <button mat-stroked-button (click)="goToFirstPage('active')" [disabled]="activePage === 1">
+              <mat-icon>first_page</mat-icon>
+            </button>
+            <button mat-stroked-button (click)="prevPage('active')" [disabled]="activePage === 1">
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            
+            <span class="page-info">
+              Página {{ activePage }} de {{ Math.ceil(totalActiveItems / activePerPage) }} (Total: {{ totalActiveItems }})
+            </span>
+          
+            <button mat-stroked-button (click)="nextPage('active')" 
+                    [disabled]="activePage >= Math.ceil(totalActiveItems / activePerPage)">
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+            <button mat-stroked-button (click)="goToLastPage('active')" 
+                    [disabled]="activePage >= Math.ceil(totalActiveItems / activePerPage)">
+              <mat-icon>last_page</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Pestaña Animes Eliminados (solo para admin) -->
+    <mat-tab *ngIf="userRole === 'admin'" label="Eliminados ({{totalDeletedItems}})">
+      <div class="content-container">
+        <div *ngIf="deletedAnimes.length === 0" class="no-results">
+          <mat-icon>delete_outline</mat-icon>
+          <p>No hay animes eliminados</p>
+        </div>
+
+        <div class="cards-grid" *ngIf="deletedAnimes.length > 0">
+          <mat-card *ngFor="let anime of deletedAnimes" class="anime-card deleted" (click)="toggleExpand(anime.id)">
+            <mat-card-header>
+              <mat-card-title class="card-title">{{ anime.title }}</mat-card-title>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div *ngIf="expandedAnimeId === anime.id" class="synopsis-container">
+                <p class="synopsis-text">{{ anime.synopsis || 'Sin sinopsis disponible' }}</p>
+              </div>
+              
+              <div *ngIf="expandedAnimeId !== anime.id" class="info-container">
+                <div class="info-item">
+                  <mat-icon>movie</mat-icon>
+                  <span>{{ getStudioName(anime.studio_id) }}</span>
+                </div>
+                
+                <div class="info-item">
+                  <mat-icon>category</mat-icon>
+                  <span>{{ formatGenres(anime.genres) }}</span>
+                </div>
+                
+                <div class="info-item">
+                  <mat-icon>event</mat-icon>
+                  <span>{{ anime.release_date | date:'mediumDate' }}</span>
+                </div>
+              </div>
+            </mat-card-content>
+            
+            <mat-card-actions>
+              <button mat-icon-button 
+                      matTooltip="Restaurar" 
+                      (click)="restoreAnime(anime.id); $event.stopPropagation()">
+                <mat-icon color="accent">restore</mat-icon>
+              </button>
+              <button mat-icon-button 
+                      matTooltip="Eliminar permanentemente" 
+                      (click)="forceDeleteAnime(anime.id); $event.stopPropagation()">
+                <mat-icon color="warn">delete_forever</mat-icon>
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+
+        <!-- Paginador para Animes Eliminados -->
+        <div class="pagination-container" *ngIf="totalDeletedItems > deletedPerPage && userRole === 'admin'">
+          <div class="pagination-controls">
+            <button mat-stroked-button (click)="goToFirstPage('deleted')" [disabled]="deletedPage === 1">
+              <mat-icon>first_page</mat-icon>
+            </button>
+            <button mat-stroked-button (click)="prevPage('deleted')" [disabled]="deletedPage === 1">
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            
+            <span class="page-info">
+              Página {{ deletedPage }} de {{ Math.ceil(totalDeletedItems / deletedPerPage) }} (Total: {{ totalDeletedItems }})
+            </span>
+          
+            <button mat-stroked-button (click)="nextPage('deleted')" 
+                    [disabled]="deletedPage >= Math.ceil(totalDeletedItems / deletedPerPage)">
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+            <button mat-stroked-button (click)="goToLastPage('deleted')" 
+                    [disabled]="deletedPage >= Math.ceil(totalDeletedItems / deletedPerPage)">
+              <mat-icon>last_page</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
 </div>

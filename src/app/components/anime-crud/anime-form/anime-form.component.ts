@@ -9,6 +9,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { lastValueFrom } from 'rxjs';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-anime-form',
@@ -19,18 +25,25 @@ import { lastValueFrom } from 'rxjs';
     MatButtonModule,
     ReactiveFormsModule,
     CommonModule,
+    MatIconModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './anime-form.component.html',
-  styleUrls: ['./anime-form.component.css'],
+  styleUrls: ['./anime-form.component.css']
 })
 export class AnimeFormComponent implements OnInit {
-  animeForm: FormGroup; // Formulario reactivo
-  isEditMode = false; // Modo edición o creación
-  animeId: number | null = null; // ID del anime (si está en modo edición)
-  studios: Studio[] = []; // Lista de estudios
-  genres: Genre[] = []; // Lista de géneros
+  animeForm: FormGroup;
+  isEditMode = false;
+  animeId: number | null = null;
+  studios: Studio[] = [];
+  genres: Genre[] = [];
+  loading = false;
+  loadingData = true;
 
-  // Inyección de dependencias con inject()
   private fb = inject(FormBuilder);
   private animeService = inject(AnimeService);
   private route = inject(ActivatedRoute);
@@ -38,103 +51,130 @@ export class AnimeFormComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
 
   constructor() {
-    // Inicializar el formulario en el constructor
     this.animeForm = this.fb.group({
-      title: ['', Validators.required],
-      synopsis: ['', Validators.required],
+      title: ['', [Validators.required, Validators.maxLength(255)]],
+      synopsis: ['', [Validators.required, Validators.minLength(10)]],
       release_date: ['', Validators.required],
-      studio_id: [0, Validators.required],
-      genres: [[] as number[], Validators.required],
+      studio_id: [null, Validators.required],
+      genres: [[], [Validators.required, Validators.minLength(1)]]
     });
   }
 
-  ngOnInit(): void {
-    // Verificar si estamos en modo edición
+  async ngOnInit(): Promise<void> {
     this.animeId = this.route.snapshot.params['id'];
-    if (this.animeId) {
-      this.isEditMode = true;
-      this.loadAnime(this.animeId); // Cargar datos del anime si está en modo edición
-    }
+    
+    try {
+      await Promise.all([
+        this.loadStudios(),
+        this.loadGenres()
+      ]);
 
-    // Cargar estudios y géneros
-    this.loadStudios();
-    this.loadGenres();
+      if (this.animeId) {
+        this.isEditMode = true;
+        await this.loadAnime(this.animeId);
+      }
+    } catch (error) {
+      this.snackBar.open('Error al cargar datos del formulario', 'Cerrar', { duration: 3000 });
+    } finally {
+      this.loadingData = false;
+    }
   }
 
-  // Cargar datos del anime (modo edición)
   async loadAnime(id: number): Promise<void> {
     try {
       const anime = await lastValueFrom(this.animeService.getAnime(id));
       this.animeForm.patchValue({
-        ...anime,
+        title: anime.title,
+        synopsis: anime.synopsis,
+        release_date: anime.release_date,
         studio_id: anime.studio.id,
-        genres: anime.genres.map((genre) => genre.id),
+        genres: anime.genres.map(genre => genre.id)
       });
     } catch (error) {
-      this.snackBar.open('Error al cargar anime', 'Cerrar', { duration: 3000 });
+      throw error;
     }
   }
 
-  // Cargar la lista de estudios
   async loadStudios(): Promise<void> {
     try {
       this.studios = await lastValueFrom(this.animeService.getStudios());
     } catch (error) {
-      this.snackBar.open('Error al cargar estudios', 'Cerrar', { duration: 3000 });
+      throw error;
     }
   }
 
-  // Cargar la lista de géneros
   async loadGenres(): Promise<void> {
     try {
       this.genres = await lastValueFrom(this.animeService.getGenres());
     } catch (error) {
-      this.snackBar.open('Error al cargar géneros', 'Cerrar', { duration: 3000 });
+      throw error;
     }
   }
 
-  // Manejar la selección de géneros
   toggleGenre(genreId: number): void {
-    const selectedGenres = this.animeForm.get('genres')?.value as number[];
-    const index = selectedGenres.indexOf(genreId);
+    const genresControl = this.animeForm.get('genres');
+    const currentGenres: number[] = genresControl?.value || [];
+    const index = currentGenres.indexOf(genreId);
+    
     if (index === -1) {
-      selectedGenres.push(genreId); // Agregar el género seleccionado
+      genresControl?.setValue([...currentGenres, genreId]);
     } else {
-      selectedGenres.splice(index, 1); // Remover el género si ya está seleccionado
+      genresControl?.setValue(currentGenres.filter(id => id !== genreId));
     }
-    this.animeForm.get('genres')?.setValue(selectedGenres);
+    genresControl?.markAsTouched();
   }
 
-  // Verificar si un género está seleccionado
   isGenreSelected(genreId: number): boolean {
-    const selectedGenres = this.animeForm.get('genres')?.value as number[];
+    const selectedGenres: number[] = this.animeForm.get('genres')?.value || [];
     return selectedGenres.includes(genreId);
   }
 
-  // Enviar el formulario (crear o actualizar)
   async onSubmit(): Promise<void> {
     if (this.animeForm.invalid) {
-      return; // Si el formulario es inválido, no hacer nada
+      this.markFormGroupTouched(this.animeForm);
+      return;
     }
 
-    const animeData = this.animeForm.value; // Obtener datos del formulario
+    this.loading = true;
+    const formData = {
+      ...this.animeForm.value,
+      release_date: this.formatDate(this.animeForm.value.release_date)
+    };
+
     try {
       if (this.isEditMode && this.animeId) {
-        // Modo edición: Actualizar anime
-        await lastValueFrom(this.animeService.updateAnime(this.animeId, animeData));
-        this.snackBar.open('Anime actualizado', 'Cerrar', { duration: 3000 });
+        await lastValueFrom(this.animeService.updateAnime(this.animeId, formData));
+        this.snackBar.open('Anime actualizado correctamente', 'Cerrar', { duration: 3000 });
       } else {
-        // Modo creación: Crear anime
-        await lastValueFrom(this.animeService.createAnime(animeData));
-        this.snackBar.open('Anime creado', 'Cerrar', { duration: 3000 });
+        await lastValueFrom(this.animeService.createAnime(formData));
+        this.snackBar.open('Anime creado correctamente', 'Cerrar', { duration: 3000 });
       }
-      this.navigateToAnimeList(); // Redirigir a la lista de animes
+      this.router.navigate(['/animes']);
     } catch (error) {
-      this.snackBar.open('Error al guardar anime', 'Cerrar', { duration: 3000 });
+      console.error('Error:', error);
+      this.snackBar.open('Error al guardar el anime. Por favor, inténtelo nuevamente.', 'Cerrar', { duration: 3000 });
+    } finally {
+      this.loading = false;
     }
   }
 
-  // Redirigir a la lista de animes
+  private formatDate(date: string | Date): string {
+    if (date instanceof Date) {
+      return date.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    }
+    return date;
+  }
+
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.values(formGroup.controls).forEach(control => {
+      control.markAsTouched();
+
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
+  }
+
   navigateToAnimeList(): void {
     this.router.navigate(['/animes']);
   }

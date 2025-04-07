@@ -1,39 +1,53 @@
 <div class="profile-container">
-    <mat-card class="profile-card">
-      <mat-card-header>
-        <mat-card-title>Mi Perfil</mat-card-title>
-      </mat-card-header>
-  
-      <mat-card-content>
-        <div *ngIf="isLoading" class="spinner-container">
-          <mat-spinner diameter="50"></mat-spinner>
+  <mat-card class="profile-card">
+    <mat-card-header>
+      <mat-card-title>Mi Perfil</mat-card-title>
+      <mat-card-subtitle>Información de tu cuenta</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div *ngIf="isLoading" class="spinner-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Cargando información del perfil...</p>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-message">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div *ngIf="!isLoading && !errorMessage" class="profile-info">
+        <div class="profile-field">
+          <label><mat-icon>person</mat-icon> Nombre:</label>
+          <p>{{ userProfile?.name || 'No disponible' }}</p>
         </div>
-  
-        <div *ngIf="!isLoading && userProfile" class="profile-info">
-          <div class="profile-field">
-            <label>Nombre:</label>
-            <p>{{ userProfile.name }}</p>
-          </div>
-  
-          <div class="profile-field">
-            <label>Email:</label>
-            <p>{{ userProfile.email }}</p>
-          </div>
-  
-          <div class="profile-field">
-            <label>Rol:</label>
-            <p>{{ userProfile.role }}</p>
-          </div>
-  
-          <div class="profile-actions">
-            <button mat-raised-button color="primary" (click)="navigateToEditName()">
-              Editar Nombre
-            </button>
-            <button mat-raised-button color="accent" (click)="navigateToChangePassword()">
-              Cambiar Contraseña
-            </button>
-          </div>
+
+        <div class="profile-field">
+          <label><mat-icon>email</mat-icon> Email:</label>
+          <p>{{ userProfile?.email || 'No disponible' }}</p>
         </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
+
+        <div class="profile-field">
+          <label><mat-icon>security</mat-icon> Rol:</label>
+          <p>{{ userProfile?.role || 'No disponible' }}</p>
+        </div>
+
+        <div class="profile-field" *ngIf="userProfile?.created_at">
+          <label><mat-icon>calendar_today</mat-icon> Miembro desde:</label>
+          <p>{{ userProfile.created_at | date:'mediumDate' }}</p>
+        </div>
+
+        <div class="profile-actions">
+          <button mat-raised-button color="primary" (click)="navigateToEditName()">
+            <mat-icon>edit</mat-icon>
+            Editar Nombre
+          </button>
+          <button mat-raised-button color="accent" (click)="navigateToChangePassword()">
+            <mat-icon>lock_reset</mat-icon>
+            Cambiar Contraseña
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

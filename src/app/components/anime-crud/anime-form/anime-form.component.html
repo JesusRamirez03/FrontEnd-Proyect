@@ -1,74 +1,99 @@
-<div class="container">
-    <h2>{{ isEditMode ? 'Editar Anime' : 'Crear Anime' }}</h2>
-  
-    <!-- Formulario reactivo -->
-    <form [formGroup]="animeForm" (ngSubmit)="onSubmit()">
-      <!-- Campo Título -->
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Título</mat-label>
-        <input matInput formControlName="title" required />
-        <mat-error *ngIf="animeForm.get('title')?.hasError('required')">
-          El título es obligatorio.
-        </mat-error>
-      </mat-form-field>
-  
-      <!-- Campo Sinopsis -->
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Sinopsis</mat-label>
-        <textarea matInput formControlName="synopsis" required></textarea>
-        <mat-error *ngIf="animeForm.get('synopsis')?.hasError('required')">
-          La sinopsis es obligatoria.
-        </mat-error>
-      </mat-form-field>
-  
-      <!-- Campo Fecha de Lanzamiento -->
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Fecha de Lanzamiento</mat-label>
-        <input matInput type="date" formControlName="release_date" required />
-        <mat-error *ngIf="animeForm.get('release_date')?.hasError('required')">
-          La fecha de lanzamiento es obligatoria.
-        </mat-error>
-      </mat-form-field>
-  
-      <!-- Campo Estudio -->
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Estudio</mat-label>
-        <select matNativeControl formControlName="studio_id" required>
-          <option value="0" disabled>Selecciona un estudio</option>
-          <option *ngFor="let studio of studios" [value]="studio.id">
-            {{ studio.name }}
-          </option>
-        </select>
-        <mat-error *ngIf="animeForm.get('studio_id')?.hasError('required')">
-          El estudio es obligatorio.
-        </mat-error>
-      </mat-form-field>
-  
-      <!-- Campo Géneros -->
-      <div class="full-width">
-        <mat-label>Géneros</mat-label>
-        <div *ngFor="let genre of genres" class="form-check">
-          <input
-            type="checkbox"
-            [id]="'genre-' + genre.id"
-            [checked]="isGenreSelected(genre.id)"
-            (change)="toggleGenre(genre.id)"
-          />
-          <label [for]="'genre-' + genre.id">{{ genre.name }}</label>
-        </div>
-        <mat-error *ngIf="animeForm.get('genres')?.hasError('required')">
-          Debes seleccionar al menos un género.
-        </mat-error>
-      </div>
-  
-      <!-- Botones de acción -->
-      <div class="button-container">
-        <button mat-raised-button color="primary" type="submit">
-          {{ isEditMode ? 'Actualizar' : 'Crear' }}
-        </button>
-        <button mat-raised-button color="warn" type="button" (click)="navigateToAnimeList()">
-          Cancelar
-        </button>
-      </div>
-    </form>
+<div class="form-container">
+  <h2 class="form-title">
+    <mat-icon>{{ isEditMode ? 'edit' : 'add' }}</mat-icon>
+    {{ isEditMode ? 'Editar Anime' : 'Crear Nuevo Anime' }}
+  </h2>
+
+  <!-- Spinner de carga inicial -->
+  <div *ngIf="loadingData" class="loading-overlay">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando formulario...</p>
   </div>
+
+  <form *ngIf="!loadingData" [formGroup]="animeForm" (ngSubmit)="onSubmit()">
+    <!-- Campo Título -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Título</mat-label>
+      <input matInput formControlName="title" required>
+      <mat-icon matPrefix>title</mat-icon>
+      <mat-error *ngIf="animeForm.get('title')?.hasError('required')">
+        El título es obligatorio
+      </mat-error>
+      <mat-error *ngIf="animeForm.get('title')?.hasError('maxlength')">
+        El título no puede exceder los 255 caracteres
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Campo Sinopsis -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Sinopsis</mat-label>
+      <textarea matInput formControlName="synopsis" required rows="4"></textarea>
+      <mat-icon matPrefix>description</mat-icon>
+      <mat-error *ngIf="animeForm.get('synopsis')?.hasError('required')">
+        La sinopsis es obligatoria
+      </mat-error>
+      <mat-error *ngIf="animeForm.get('synopsis')?.hasError('minlength')">
+        La sinopsis debe tener al menos 10 caracteres
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Campo Fecha de Lanzamiento -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Fecha de Lanzamiento</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="release_date" required>
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+      <mat-icon matPrefix>event</mat-icon>
+      <mat-error *ngIf="animeForm.get('release_date')?.hasError('required')">
+        La fecha es obligatoria
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Campo Estudio -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Estudio</mat-label>
+      <mat-select formControlName="studio_id" required>
+        <mat-option *ngFor="let studio of studios" [value]="studio.id">
+          {{ studio.name }}
+        </mat-option>
+      </mat-select>
+      <mat-icon matPrefix>theaters</mat-icon>
+      <mat-error *ngIf="animeForm.get('studio_id')?.hasError('required')">
+        Debes seleccionar un estudio
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Campo Géneros -->
+    <div class="genres-section">
+      <h3 class="section-title">
+        <mat-icon>category</mat-icon>
+        Géneros
+      </h3>
+      <div class="genres-container">
+        <mat-checkbox *ngFor="let genre of genres" 
+          [checked]="isGenreSelected(genre.id)"
+          (change)="toggleGenre(genre.id)">
+          {{ genre.name }}
+        </mat-checkbox>
+      </div>
+      <mat-error *ngIf="animeForm.get('genres')?.hasError('required') && animeForm.get('genres')?.touched">
+        Debes seleccionar al menos un género
+      </mat-error>
+      <mat-error *ngIf="animeForm.get('genres')?.hasError('minlength') && animeForm.get('genres')?.touched">
+        Debes seleccionar al menos un género
+      </mat-error>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="form-actions">
+      <button mat-raised-button type="button" color="warn" (click)="navigateToAnimeList()" [disabled]="loading">
+        <mat-icon>cancel</mat-icon> Cancelar
+      </button>
+      <button mat-raised-button type="submit" color="primary" [disabled]="animeForm.invalid || loading">
+        <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+        {{ isEditMode ? 'Guardar Cambios' : 'Crear Anime' }}
+        <mat-spinner *ngIf="loading" diameter="20" class="button-spinner"></mat-spinner>
+      </button>
+    </div>
+  </form>
+</div>

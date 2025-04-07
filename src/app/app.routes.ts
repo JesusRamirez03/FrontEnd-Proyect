@@ -62,7 +62,7 @@ export const routes: Routes = [
 
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'profile/edit-name', component: EditNameComponent, canActivate: [authGuard]},
-  { path: 'profile/change-password', component: ChancePasswordComponent, canActivate: [adminGuard]},
+  { path: 'profile/chance-password', component: ChancePasswordComponent, canActivate: [authGuard]},
 
   { path: '**', redirectTo: '' } // Ruta comodín para 404
 ];

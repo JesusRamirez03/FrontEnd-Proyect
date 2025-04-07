@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, catchError, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
 import { Router } from '@angular/router';
 
@@ -20,12 +21,22 @@ export class ProfileService {
     const token = this.authService.getToken();
     return new HttpHeaders({
       'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json',
       'Content-Type': 'application/json'
     });
   }
 
   getProfile(): Observable<any> {
-    return this.http.get(`${this.apiUrl}`, { headers: this.getHeaders() }).pipe(
+    return this.http.get(`${this.apiUrl}`, { 
+      headers: this.getHeaders(),
+      observe: 'response'
+    }).pipe(
+      map(response => {
+        if (response.body) {
+          return response.body;
+        }
+        throw new Error('Respuesta vacía del servidor');
+      }),
       catchError(error => {
         this.handleError(error);
         return throwError(() => error);
@@ -34,7 +45,11 @@ export class ProfileService {
   }
 
   updateName(name: string): Observable<any> {
-    return this.http.put(`${this.apiUrl}/name`, { name }, { headers: this.getHeaders() }).pipe(
+    return this.http.put(`${this.apiUrl}/name`, { name }, { 
+      headers: this.getHeaders(),
+      observe: 'response'
+    }).pipe(
+      map(response => response.body),
       catchError(error => {
         this.handleError(error);
         return throwError(() => error);
@@ -42,17 +57,14 @@ export class ProfileService {
     );
   }
 
-  updatePassword(currentPassword: string, newPassword: string): Observable<any> {
-    return this.http.put(`${this.apiUrl}/password`, {
-      current_password: currentPassword,
-      new_password: newPassword
-    }, { headers: this.getHeaders() }).pipe(
-      catchError(error => {
-        this.handleError(error);
-        return throwError(() => error);
-      })
-    );
-  }
+// profile.service.ts (AJUSTADO)
+updatePassword(currentPassword: string, newPassword: string, confirmPassword: string): Observable<any> {
+  return this.http.put(`${this.apiUrl}/password`, {
+    current_password: currentPassword,
+    new_password: newPassword,
+    new_password_confirmation: confirmPassword // Añadir este campo
+  }, { headers: this.getHeaders() });
+}
 
   private handleError(error: any): void {
     if (error.status === 401) {

@@ -1,55 +1,86 @@
-<app-navbar
-  [userName]="userName"
-  (logoutEvent)="onLogout()">
-</app-navbar>
+<app-navbar [userName]="userName" (logoutEvent)="onLogout()"></app-navbar>
 
 <div class="container">
-  <h2>Listado de Personajes</h2>
+  <h2>Gestión de Personajes</h2>
 
-  <!-- Botón para crear un personaje (solo para admin) -->
+  <!-- Botón crear -->
   <button *ngIf="userRole === 'admin'" mat-raised-button color="primary" (click)="navigateToCreate()">
-    <mat-icon>add</mat-icon> Crear Nuevo Personaje
+    <mat-icon>add</mat-icon> Nuevo Personaje
   </button>
 
-  <!-- Personajes Activos -->
-  <h3>Personajes Activos</h3>
-  <div class="cards-container">
-    <mat-card *ngFor="let character of activeCharacters" class="green-card">
-      <mat-card-content>
-        <span class="card-title">{{ character.name }}</span>
-        <span class="card-info">Anime: {{ character.anime?.title || 'N/A' }}</span>
-        <span class="card-info">Manga: {{ character.manga?.title || 'N/A' }}</span>
-      </mat-card-content>
-      <mat-card-actions *ngIf="userRole === 'admin'">
-        <button mat-icon-button color="primary" (click)="navigateToUpdate(character.id)">
-          <mat-icon>edit</mat-icon>
-        </button>
-        <button mat-icon-button color="warn" (click)="deleteCharacter(character.id)">
-          <mat-icon>delete</mat-icon>
-        </button>
-      </mat-card-actions>
-    </mat-card>
+  <!-- Spinner -->
+  <div *ngIf="loading" class="loading-overlay">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando personajes...</p>
   </div>
 
-  <!-- Personajes Eliminados (solo para admin) -->
-  <div *ngIf="userRole === 'admin'">
-    <h3>Personajes Eliminados</h3>
-    <div class="cards-container">
-      <mat-card *ngFor="let character of deletedCharacters" class="red-card">
-        <mat-card-content>
-          <span class="card-title">{{ character.name }}</span>
-          <span class="card-info">Anime: {{ character.anime?.title || 'N/A' }}</span>
-          <span class="card-info">Manga: {{ character.manga?.title || 'N/A' }}</span>
-        </mat-card-content>
-        <mat-card-actions>
-          <button mat-icon-button color="accent" (click)="restoreCharacter(character.id)">
-            <mat-icon>restore</mat-icon>
-          </button>
-          <button mat-icon-button color="warn" (click)="forceDeleteCharacter(character.id)">
-            <mat-icon>delete_forever</mat-icon>
-          </button>
-        </mat-card-actions>
-      </mat-card>
-    </div>
+  <mat-tab-group *ngIf="!loading && totalItems > 0">
+    <!-- Pestaña Activos -->
+    <mat-tab label="Activos ({{activeCharacters.length}})">
+      <div class="cards-grid">
+        <mat-card *ngFor="let character of activeCharacters" class="character-card active">
+          <mat-card-content>
+            <div class="character-name">{{ character.name }}</div>
+            <div class="character-info">Anime: {{ character.anime?.title || 'N/A' }}</div>
+            <div class="character-info">Manga: {{ character.manga?.title || 'N/A' }}</div>
+          </mat-card-content>
+          <mat-card-actions *ngIf="userRole === 'admin'">
+            <button mat-icon-button (click)="navigateToUpdate(character.id)" matTooltip="Editar">
+              <mat-icon color="primary">edit</mat-icon>
+            </button>
+            <button mat-icon-button (click)="deleteCharacter(character.id)" matTooltip="Eliminar">
+              <mat-icon color="warn">delete</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- Pestaña Eliminados -->
+    <mat-tab *ngIf="userRole === 'admin'" label="Eliminados ({{deletedCharacters.length}})">
+      <div class="cards-grid">
+        <mat-card *ngFor="let character of deletedCharacters" class="character-card deleted">
+          <mat-card-content>
+            <div class="character-name">{{ character.name }}</div>
+            <div class="character-info">Anime: {{ character.anime?.title || 'N/A' }}</div>
+            <div class="character-info">Manga: {{ character.manga?.title || 'N/A' }}</div>
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-icon-button (click)="restoreCharacter(character.id)" matTooltip="Restaurar">
+              <mat-icon color="accent">restore</mat-icon>
+            </button>
+            <button mat-icon-button (click)="forceDeleteCharacter(character.id)" matTooltip="Eliminar permanentemente">
+              <mat-icon color="warn">delete_forever</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+
+  <!-- Mensaje cuando no hay personajes -->
+  <div *ngIf="!loading && totalItems === 0" class="no-results">
+    <p>No se encontraron personajes</p>
+  </div>
+
+  <!-- Paginación -->
+  <div class="pagination-controls" *ngIf="totalItems > itemsPerPage">
+    <button mat-stroked-button (click)="goToPage(1)" [disabled]="currentPage === 1">
+      <mat-icon>first_page</mat-icon>
+    </button>
+    <button mat-stroked-button (click)="prevPage()" [disabled]="currentPage === 1">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    
+    <span class="page-info">
+      Página {{ currentPage }} de {{ totalPages }} (Total: {{ totalItems }})
+    </span>
+  
+    <button mat-stroked-button (click)="nextPage()" [disabled]="currentPage === totalPages">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+    <button mat-stroked-button (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages">
+      <mat-icon>last_page</mat-icon>
+    </button>
   </div>
 </div>

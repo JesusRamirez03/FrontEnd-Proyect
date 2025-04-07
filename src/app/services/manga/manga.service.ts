@@ -9,80 +9,71 @@ export interface Manga {
   synopsis: string;
   release_date: string;
   author_id: number;
-  author: Author; // Agregar esta propiedad
+  author: Author;
   genres: { id: number; name: string }[];
-  deleted_at?: string | null; // Para manejar soft delete
+  deleted_at?: string | null;
 }
 
 export interface Author {
   id: number;
   name: string;
-  deleted_at?: string | null; // Propiedad opcional
+  deleted_at?: string | null;
 }
 
 export interface Genre {
   id: number;
   name: string;
-  deleted_at?: string | null; // Propiedad opcional
+  deleted_at?: string | null;
 }
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class MangaService {
-  private apiUrl = 'http://127.0.0.1:8000/api/mangas'; // URL de la API de mangas
-  private authorsUrl = 'http://127.0.0.1:8000/api/authors'; // URL de la API de autores
-  private genresUrl = 'http://127.0.0.1:8000/api/genres'; // URL de la API de géneros
+  private apiUrl = 'http://127.0.0.1:8000/api/mangas';
+  private authorsUrl = 'http://127.0.0.1:8000/api/authors';
+  private genresUrl = 'http://127.0.0.1:8000/api/genres';
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
-  // Método para construir las cabeceras HTTP con el token de autenticación
   private getHeaders(): HttpHeaders {
     const token = this.authService.getToken();
-    if (!token) {
-      throw new Error('No se encontró el token de autenticación.');
-    }
     return new HttpHeaders({
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
     });
   }
 
-  // Manejo de errores HTTP
   private handleError(error: HttpErrorResponse): Observable<never> {
-    let errorMessage = 'Ocurrió un error en la solicitud.';
+    let errorMessage = 'Error en la solicitud';
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Error: ${error.error.message}`;
     } else {
-      errorMessage = `Código de error: ${error.status}\nMensaje: ${error.message}`;
+      errorMessage = `Código ${error.status}: ${error.error.message || error.message}`;
     }
     console.error(errorMessage);
     return throwError(() => new Error(errorMessage));
   }
 
-  // Obtener todos los mangas (incluyendo eliminados)
+  // Obtener todos los mangas (sin paginación)
   getMangas(): Observable<Manga[]> {
     return this.http.get<Manga[]>(this.apiUrl, { headers: this.getHeaders() }).pipe(
       catchError(this.handleError)
     );
   }
 
-  // Obtener la lista de autores
-  getAuthors(): Observable<Author[]> {
-    return this.http.get<Author[]>(`${this.authorsUrl}/all`, { headers: this.getHeaders() }).pipe(
-      map((authors: Author[]) => authors.filter(author => author.deleted_at === null )),
-      catchError(this.handleError)
-    );
-  }
-  
-  // Obtener la lista de géneros
-  getGenres(): Observable<Genre[]> {
-    return this.http.get<Genre[]>(this.genresUrl, { headers: this.getHeaders() }).pipe(
+  // Obtener mangas con paginación
+  getMangasPaginated(page: number = 1, perPage: number = 10): Observable<{mangas: Manga[], pagination: any}> {
+    const params = { page: page.toString(), per_page: perPage.toString() };
+    return this.http.get<{mangas: Manga[], pagination: any}>(this.apiUrl, { 
+      headers: this.getHeaders(),
+      params: params 
+    }).pipe(
       catchError(this.handleError)
     );
   }
 
-  // Obtener un manga específico por ID
+  // Obtener un manga específico
   getManga(id: number): Observable<Manga> {
     return this.http.get<Manga>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).pipe(
       catchError(this.handleError)
@@ -102,7 +93,7 @@ export class MangaService {
     );
   }
 
-  // Actualizar un manga existente
+  // Actualizar un manga
   updateManga(id: number, manga: {
     title?: string;
     synopsis?: string;
@@ -122,16 +113,30 @@ export class MangaService {
     );
   }
 
-  // Restaurar un manga eliminado
+  // Restaurar un manga
   restoreManga(id: number): Observable<Manga> {
     return this.http.post<Manga>(`${this.apiUrl}/${id}/restore`, {}, { headers: this.getHeaders() }).pipe(
       catchError(this.handleError)
     );
   }
 
-  // Eliminar un manga permanentemente
+  // Eliminar permanentemente un manga
   forceDeleteManga(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}/force-delete`, { headers: this.getHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // Obtener autores
+  getAuthors(): Observable<Author[]> {
+    return this.http.get<Author[]>(`${this.authorsUrl}/all`, { headers: this.getHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // Obtener géneros
+  getGenres(): Observable<Genre[]> {
+    return this.http.get<Genre[]>(`${this.genresUrl}/all`, { headers: this.getHeaders() }).pipe(
       catchError(this.handleError)
     );
   }

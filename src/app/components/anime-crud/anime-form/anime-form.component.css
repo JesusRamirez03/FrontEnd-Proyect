@@ -1,17 +1,94 @@
-.container {
-    padding: 20px;
+.form-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.form-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #3f51b5;
+  margin-bottom: 2rem;
+  font-weight: 500;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.genres-section {
+  margin: 2rem 0;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #3f51b5;
+  margin-bottom: 1rem;
+}
+
+.genres-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.genres-container mat-checkbox {
+  margin-right: 16px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+button mat-icon {
+  margin-right: 8px;
+}
+
+.button-spinner {
+  display: inline-block;
+  margin-left: 8px;
+}
+
+mat-form-field {
+  margin-bottom: 1.5rem;
+}
+
+mat-error {
+  font-size: 12px;
+  margin-top: -1rem;
+  margin-bottom: 1rem;
+  color: #f44336;
+}
+
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 15px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-container {
+    padding: 1rem;
   }
   
-  .full-width {
-    width: 100%;
+  .genres-container {
+    flex-direction: column;
+    gap: 0.5rem;
   }
-  
-  .button-container {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-  }
-  
-  .form-check {
-    margin-bottom: 10px;
-  }
+}

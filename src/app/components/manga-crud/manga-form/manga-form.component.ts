@@ -10,6 +10,12 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { lastValueFrom } from 'rxjs';
 import { Author, Genre } from '../../../services/manga/manga.service';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-manga-form',
@@ -20,123 +26,137 @@ import { Author, Genre } from '../../../services/manga/manga.service';
     MatButtonModule,
     ReactiveFormsModule,
     CommonModule,
+    MatIconModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatProgressSpinner
   ],
   templateUrl: './manga-form.component.html',
-  styleUrls: ['./manga-form.component.css'],
+  styleUrls: ['./manga-form.component.css']
 })
 export class MangaFormComponent implements OnInit {
-  mangaForm: FormGroup; // Formulario reactivo
-  isEditMode = false; // Modo edición o creación
-  mangaId: number | null = null; // ID del manga (si está en modo edición)
-  authors: Author[] = []; // Lista de autores
-  genres: Genre[] = []; // Lista de géneros
+  mangaForm: FormGroup;
+  isEditMode = false;
+  mangaId: number | null = null;
+  authors: Author[] = [];
+  genres: Genre[] = [];
+  loading = false;
 
-  // Inyección de dependencias con inject()
   private fb = inject(FormBuilder);
   private mangaService = inject(MangaService);
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
+  public router = inject(Router);
   private snackBar = inject(MatSnackBar);
 
   constructor() {
-    // Inicializar el formulario en el constructor
     this.mangaForm = this.fb.group({
       title: ['', Validators.required],
       synopsis: ['', Validators.required],
       release_date: ['', Validators.required],
-      author_id: [0, Validators.required],
-      genres: [[] as number[], Validators.required],
+      author_id: ['', Validators.required],
+      genres: [[], Validators.required]
     });
   }
 
   ngOnInit(): void {
-    // Verificar si estamos en modo edición
     this.mangaId = this.route.snapshot.params['id'];
     if (this.mangaId) {
       this.isEditMode = true;
-      this.loadManga(this.mangaId); // Cargar datos del manga si está en modo edición
+      this.loadManga(this.mangaId);
     }
-
-    // Cargar autores y géneros
     this.loadAuthors();
     this.loadGenres();
   }
 
-  // Cargar datos del manga (modo edición)
   async loadManga(id: number): Promise<void> {
     try {
       const manga = await lastValueFrom(this.mangaService.getManga(id));
       this.mangaForm.patchValue({
-        ...manga,
+        title: manga.title,
+        synopsis: manga.synopsis,
+        release_date: manga.release_date,
         author_id: manga.author.id,
-        genres: manga.genres.map((genre) => genre.id),
+        genres: manga.genres.map(genre => genre.id)
       });
     } catch (error) {
-      this.snackBar.open('Error al cargar manga', 'Cerrar', { duration: 3000 });
+      this.showError('Error al cargar manga');
     }
   }
 
-  // Cargar la lista de autores
   async loadAuthors(): Promise<void> {
     try {
       this.authors = await lastValueFrom(this.mangaService.getAuthors());
     } catch (error) {
-      this.snackBar.open('Error al cargar autores', 'Cerrar', { duration: 3000 });
+      this.showError('Error al cargar autores');
     }
   }
 
-  // Cargar la lista de géneros
   async loadGenres(): Promise<void> {
     try {
       this.genres = await lastValueFrom(this.mangaService.getGenres());
     } catch (error) {
-      this.snackBar.open('Error al cargar géneros', 'Cerrar', { duration: 3000 });
+      this.showError('Error al cargar géneros');
     }
   }
 
-  // Manejar la selección de géneros
   toggleGenre(genreId: number): void {
-    const selectedGenres = this.mangaForm.get('genres')?.value as number[];
-    const index = selectedGenres.indexOf(genreId);
+    const genresControl = this.mangaForm.get('genres');
+    const currentGenres: number[] = genresControl?.value || [];
+    const index = currentGenres.indexOf(genreId);
+    
     if (index === -1) {
-      selectedGenres.push(genreId); // Agregar el género seleccionado
+      genresControl?.setValue([...currentGenres, genreId]);
     } else {
-      selectedGenres.splice(index, 1); // Remover el género si ya está seleccionado
+      genresControl?.setValue(currentGenres.filter(id => id !== genreId));
     }
-    this.mangaForm.get('genres')?.setValue(selectedGenres);
   }
 
-  // Verificar si un género está seleccionado
   isGenreSelected(genreId: number): boolean {
-    const selectedGenres = this.mangaForm.get('genres')?.value as number[];
+    const selectedGenres: number[] = this.mangaForm.get('genres')?.value || [];
     return selectedGenres.includes(genreId);
   }
 
-  // Enviar el formulario (crear o actualizar)
   async onSubmit(): Promise<void> {
-    if (this.mangaForm.invalid) {
-      return; // Si el formulario es inválido, no hacer nada
-    }
+    if (this.mangaForm.invalid) return;
 
-    const mangaData = this.mangaForm.value; // Obtener datos del formulario
+    this.loading = true;
+    const formData = {
+      ...this.mangaForm.value,
+      release_date: this.formatDate(this.mangaForm.value.release_date)
+    };
+
     try {
       if (this.isEditMode && this.mangaId) {
-        // Modo edición: Actualizar manga
-        await lastValueFrom(this.mangaService.updateManga(this.mangaId, mangaData));
-        this.snackBar.open('Manga actualizado', 'Cerrar', { duration: 3000 });
+        await lastValueFrom(this.mangaService.updateManga(this.mangaId, formData));
+        this.showSuccess('Manga actualizado correctamente');
       } else {
-        // Modo creación: Crear manga
-        await lastValueFrom(this.mangaService.createManga(mangaData));
-        this.snackBar.open('Manga creado', 'Cerrar', { duration: 3000 });
+        await lastValueFrom(this.mangaService.createManga(formData));
+        this.showSuccess('Manga creado correctamente');
       }
-      this.navigateToMangaList(); // Redirigir a la lista de mangas
+      this.router.navigate(['/mangas']);
     } catch (error) {
-      this.snackBar.open('Error al guardar manga', 'Cerrar', { duration: 3000 });
+      this.showError('Error al guardar manga');
+    } finally {
+      this.loading = false;
     }
   }
 
-  // Redirigir a la lista de mangas
-  navigateToMangaList(): void {
-    this.router.navigate(['/mangas']);
+  private formatDate(date: string | Date): string {
+    // Si es un objeto Date (desde el datepicker)
+    if (date instanceof Date) {
+      return date.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    }
+    // Si ya es un string en formato correcto
+    return date;
+  }
+
+  private showError(message: string): void {
+    this.snackBar.open(message, 'Cerrar', { duration: 3000 });
+  }
+
+  private showSuccess(message: string): void {
+    this.snackBar.open(message, 'Cerrar', { duration: 3000 });
   }
 }

@@ -9,6 +9,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { lastValueFrom } from 'rxjs';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-character-form',
@@ -19,103 +22,133 @@ import { lastValueFrom } from 'rxjs';
     MatButtonModule,
     ReactiveFormsModule,
     CommonModule,
+    MatIconModule,
+    MatSelectModule,
+    MatProgressSpinner
   ],
   templateUrl: './character-form.component.html',
   styleUrls: ['./character-form.component.css'],
 })
 export class CharacterFormComponent implements OnInit {
-  characterForm: FormGroup; // Formulario reactivo
-  isEditMode = false; // Modo edición o creación
-  characterId: number | null = null; // ID del personaje (si está en modo edición)
-  animes: Anime[] = []; // Lista de animes
-  mangas: Manga[] = []; // Lista de mangas
+  characterForm: FormGroup;
+  isEditMode = false;
+  characterId: number | null = null;
+  animes: Anime[] = [];
+  mangas: Manga[] = [];
+  loading = false;
 
-  // Inyección de dependencias con inject()
+  loadingAnimes = false;
+  loadingMangas = false;
+  loadError = '';
+
   private fb = inject(FormBuilder);
   private characterService = inject(CharacterService);
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
+  public router = inject(Router);
   private snackBar = inject(MatSnackBar);
 
   constructor() {
-    // Inicializar el formulario reactivo
     this.characterForm = this.fb.group({
-      name: ['', Validators.required],
+      name: ['', [Validators.required, Validators.maxLength(255)]],
       anime_id: [null],
-      manga_id: [null],
+      manga_id: [null]
     });
   }
 
   ngOnInit(): void {
-    // Verificar si estamos en modo edición
     this.characterId = this.route.snapshot.params['id'];
     if (this.characterId) {
       this.isEditMode = true;
-      this.loadCharacter(this.characterId); // Cargar datos del personaje si está en modo edición
+      this.loadCharacter(this.characterId);
     }
-
-    // Cargar animes y mangas
-    this.loadAnimes();
-    this.loadMangas();
+    this.loadData();
   }
 
-  // Cargar datos del personaje (modo edición)
+  async loadData(): Promise<void> {
+    await Promise.all([this.loadAnimes(), this.loadMangas()]);
+  }
+
   async loadCharacter(id: number): Promise<void> {
     try {
+      this.loading = true;
       const character = await lastValueFrom(this.characterService.getCharacter(id));
+      
+      console.log('Datos del personaje recibidos:', character); // Para debug
+      
       this.characterForm.patchValue({
-        ...character,
+        name: character.name,
         anime_id: character.anime?.id || null,
-        manga_id: character.manga?.id || null,
+        manga_id: character.manga?.id || null
       });
     } catch (error) {
-      this.snackBar.open('Error al cargar personaje', 'Cerrar', { duration: 3000 });
+      console.error('Error al cargar personaje:', error);
+      this.showError('Error al cargar personaje');
+    } finally {
+      this.loading = false;
     }
   }
 
-  // Cargar la lista de animes
   async loadAnimes(): Promise<void> {
+    this.loadingAnimes = true;
+    this.loadError = '';
     try {
-      this.animes = await lastValueFrom(this.characterService.getAnimes());
+      const response = await lastValueFrom(this.characterService.getAnimes());
+      console.log('Animes cargados:', response); // Debug
+      this.animes = response;
     } catch (error) {
-      this.snackBar.open('Error al cargar animes', 'Cerrar', { duration: 3000 });
+      console.error('Error cargando animes:', error); // Debug
+      this.loadError = 'Error al cargar animes';
+      this.snackBar.open(this.loadError, 'Cerrar', { duration: 3000 });
+    } finally {
+      this.loadingAnimes = false;
     }
   }
 
-  // Cargar la lista de mangas
+
   async loadMangas(): Promise<void> {
+    this.loadingMangas = true;
+    this.loadError = '';
     try {
-      this.mangas = await lastValueFrom(this.characterService.getMangas());
+      const response = await lastValueFrom(this.characterService.getMangas());
+      console.log('Mangas cargados:', response); // Debug
+      this.mangas = response;
     } catch (error) {
-      this.snackBar.open('Error al cargar mangas', 'Cerrar', { duration: 3000 });
+      console.error('Error cargando mangas:', error); // Debug
+      this.loadError = 'Error al cargar mangas';
+      this.snackBar.open(this.loadError, 'Cerrar', { duration: 3000 });
+    } finally {
+      this.loadingMangas = false;
     }
   }
 
-  // Enviar el formulario (crear o actualizar)
-  async onSubmit(): Promise<void> {
-    if (this.characterForm.invalid) {
-      return; // Si el formulario es inválido, no hacer nada
-    }
 
-    const characterData = this.characterForm.value; // Obtener datos del formulario
+  async onSubmit(): Promise<void> {
+    if (this.characterForm.invalid) return;
+
+    this.loading = true;
+    const formData = this.characterForm.value;
+
     try {
       if (this.isEditMode && this.characterId) {
-        // Modo edición: Actualizar personaje
-        await lastValueFrom(this.characterService.updateCharacter(this.characterId, characterData));
-        this.snackBar.open('Personaje actualizado', 'Cerrar', { duration: 3000 });
+        await lastValueFrom(this.characterService.updateCharacter(this.characterId, formData));
+        this.showSuccess('Personaje actualizado correctamente');
       } else {
-        // Modo creación: Crear personaje
-        await lastValueFrom(this.characterService.createCharacter(characterData));
-        this.snackBar.open('Personaje creado', 'Cerrar', { duration: 3000 });
+        await lastValueFrom(this.characterService.createCharacter(formData));
+        this.showSuccess('Personaje creado correctamente');
       }
-      this.navigateToCharacterList(); // Redirigir a la lista de personajes
+      this.router.navigate(['/characters']);
     } catch (error) {
-      this.snackBar.open('Error al guardar personaje', 'Cerrar', { duration: 3000 });
+      this.showError('Error al guardar personaje');
+    } finally {
+      this.loading = false;
     }
   }
 
-  // Redirigir a la lista de personajes
-  navigateToCharacterList(): void {
-    this.router.navigate(['/characters']);
+  private showError(message: string): void {
+    this.snackBar.open(message, 'Cerrar', { duration: 3000 });
+  }
+
+  private showSuccess(message: string): void {
+    this.snackBar.open(message, 'Cerrar', { duration: 3000 });
   }
 }

@@ -1,5 +1,5 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { CharacterService, Character } from '../../services/character/character.service';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { CharacterService, Character, Anime, Manga } from '../../services/character/character.service';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
@@ -8,25 +8,46 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { lastValueFrom } from 'rxjs';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-character-crud',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, MatCardModule, MatButtonModule, MatIconModule],
+  imports: [
+    CommonModule,
+    NavbarComponent,
+    MatIconModule,
+    MatButtonModule,
+    MatCardModule,
+    MatProgressSpinnerModule,
+    MatTabsModule,
+    MatPaginatorModule,
+    MatTooltipModule
+  ],
   templateUrl: './character-crud.component.html',
   styleUrls: ['./character-crud.component.css'],
 })
-export class CharacterCrudComponent implements OnInit {
-  allCharacters: Character[] = []; // Todos los personajes
-  activeCharacters: Character[] = []; // Personajes activos
-  deletedCharacters: Character[] = []; // Personajes eliminados
-  userRole: string | null = ''; // Rol del usuario
-  userName: string | null = ''; // Nombre del usuario
+export class CharacterCrudComponent implements OnInit, OnDestroy {
+  allCharacters: Character[] = [];
+  activeCharacters: Character[] = [];
+  deletedCharacters: Character[] = [];
+  userRole: string | null = '';
+  userName: string | null = '';
+  loading: boolean = true;
 
-  // Inyección de dependencias con inject()
+  // Paginación
+  currentPage: number = 1;
+  itemsPerPage: number = 10;
+  totalItems: number = 0;
+  totalPages: number = 0;
+
+  // Inyección de dependencias
   private characterService = inject(CharacterService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
@@ -36,21 +57,82 @@ export class CharacterCrudComponent implements OnInit {
   ngOnInit(): void {
     this.userRole = this.authService.getUserRole();
     this.userName = this.authService.getUserName();
-    this.loadCharacters();
+    this.loadAllData();
   }
 
-  onLogout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+  async loadAllData(): Promise<void> {
+    this.loading = true;
+    try {
+      await Promise.all([
+        this.loadCharacters(),
+        this.loadAnimes(),
+        this.loadMangas()
+      ]);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      this.snackBar.open('Error al cargar datos', 'Cerrar', { duration: 3000 });
+    } finally {
+      this.loading = false;
+    }
   }
 
   async loadCharacters(): Promise<void> {
     try {
-      this.allCharacters = await lastValueFrom(this.characterService.getCharacters());
-      this.activeCharacters = this.allCharacters.filter(character => !character.deleted_at); // Personajes activos
-      this.deletedCharacters = this.allCharacters.filter(character => character.deleted_at); // Personajes eliminados
+      const response = await lastValueFrom(
+        this.characterService.getCharactersPaginated(this.currentPage, this.itemsPerPage)
+      );
+      this.allCharacters = response.characters;
+      this.activeCharacters = this.allCharacters.filter(character => !character.deleted_at);
+      this.deletedCharacters = this.allCharacters.filter(character => character.deleted_at);
+      this.totalItems = response.pagination.total;
+      this.totalPages = response.pagination.last_page;
     } catch (error) {
       this.snackBar.open('Error al cargar personajes', 'Cerrar', { duration: 3000 });
+    }
+  }
+
+  async loadAnimes(): Promise<void> {
+    try {
+      const animes = await lastValueFrom(this.characterService.getAnimes());
+      // Puedes almacenarlos si necesitas más funcionalidad
+    } catch (error) {
+      console.error('Error loading animes:', error);
+    }
+  }
+
+  async loadMangas(): Promise<void> {
+    try {
+      const mangas = await lastValueFrom(this.characterService.getMangas());
+      // Puedes almacenarlos si necesitas más funcionalidad
+    } catch (error) {
+      console.error('Error loading mangas:', error);
+    }
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.currentPage = event.pageIndex + 1;
+    this.itemsPerPage = event.pageSize;
+    this.loadCharacters();
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.loadCharacters();
+    }
+  }
+  
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.loadCharacters();
+    }
+  }
+  
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.loadCharacters();
     }
   }
 
@@ -60,6 +142,11 @@ export class CharacterCrudComponent implements OnInit {
 
   navigateToUpdate(id: number): void {
     this.router.navigate([`/characters/edit/${id}`]);
+  }
+
+  onLogout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
   async deleteCharacter(id: number): Promise<void> {
@@ -106,5 +193,9 @@ export class CharacterCrudComponent implements OnInit {
         }
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    // Limpieza si es necesaria
   }
 }

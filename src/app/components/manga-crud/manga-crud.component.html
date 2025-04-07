@@ -1,73 +1,95 @@
-<app-navbar
-  [userName]="userName"
-  (logoutEvent)="onLogout()">
-</app-navbar>
+<app-navbar [userName]="userName" (logoutEvent)="onLogout()"></app-navbar>
 
 <div class="container">
-  <h2>Listado de Mangas</h2>
+  <h2>Gestión de Mangas</h2>
 
-  <!-- Botón para crear un manga (solo para admin) -->
+  <!-- Botón crear -->
   <button *ngIf="userRole === 'admin'" mat-raised-button color="primary" (click)="navigateToCreate()">
-    <mat-icon>add</mat-icon> Crear Nuevo Manga
+    <mat-icon>add</mat-icon> Nuevo Manga
   </button>
 
-  <!-- Mangas Activos -->
-  <h3>Mangas Activos</h3>
-  <div class="cards-container">
-    <mat-card
-      *ngFor="let manga of activeMangas"
-      class="green-card"
-      (click)="toggleExpand(manga.id)">
-      <mat-card-content>
-        <span class="card-title">{{ manga.title }}</span>
-        <div *ngIf="expandedMangaId === manga.id" class="synopsis-container">
-          <div class="synopsis-text">{{ manga.synopsis }}</div>
-        </div>
-        <div *ngIf="expandedMangaId !== manga.id" class="info-container">
-          <span class="card-info">Autor: {{ manga.author.name }}</span>
-          <span class="card-info">Géneros: {{ formatGenres(manga.genres) }}</span>
-          <span class="card-info">Fecha de Lanzamiento: {{ manga.release_date }}</span>
-        </div>
-      </mat-card-content>
-      <mat-card-actions *ngIf="userRole === 'admin'">
-        <button mat-icon-button color="primary" (click)="navigateToUpdate(manga.id); $event.stopPropagation()">
-          <mat-icon>edit</mat-icon>
-        </button>
-        <button mat-icon-button color="warn" (click)="deleteManga(manga.id); $event.stopPropagation()">
-          <mat-icon>delete</mat-icon>
-        </button>
-      </mat-card-actions>
-    </mat-card>
+  <!-- Spinner -->
+  <div *ngIf="loading" class="loading-overlay">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando mangas...</p>
   </div>
 
-  <!-- Mangas Eliminados (solo para admin) -->
-  <div *ngIf="userRole === 'admin'">
-    <h3>Mangas Eliminados</h3>
-    <div class="cards-container">
-      <mat-card
-        *ngFor="let manga of deletedMangas"
-        class="red-card"
-        (click)="toggleExpand(manga.id)">
-        <mat-card-content>
-          <span class="card-title">{{ manga.title }}</span>
-          <div *ngIf="expandedMangaId === manga.id" class="synopsis-container">
-            <div class="synopsis-text">{{ manga.synopsis }}</div>
-          </div>
-          <div *ngIf="expandedMangaId !== manga.id" class="info-container">
-            <span class="card-info">Autor: {{ manga.author.name }}</span>
-            <span class="card-info">Géneros: {{ formatGenres(manga.genres) }}</span>
-            <span class="card-info">Fecha de Lanzamiento: {{ manga.release_date }}</span>
-          </div>
-        </mat-card-content>
-        <mat-card-actions>
-          <button mat-icon-button color="accent" (click)="restoreManga(manga.id); $event.stopPropagation()">
-            <mat-icon>restore</mat-icon>
-          </button>
-          <button mat-icon-button color="warn" (click)="forceDeleteManga(manga.id); $event.stopPropagation()">
-            <mat-icon>delete_forever</mat-icon>
-          </button>
-        </mat-card-actions>
-      </mat-card>
-    </div>
+  <mat-tab-group *ngIf="!loading && totalItems > 0">
+    <!-- Pestaña Activos -->
+    <mat-tab label="Activos ({{activeMangas.length}})">
+      <div class="cards-grid">
+        <mat-card *ngFor="let manga of activeMangas" class="manga-card active" (click)="toggleExpand(manga.id)">
+          <mat-card-content>
+            <div class="manga-title">{{ manga.title }}</div>
+            <div class="manga-info">Autor: {{ getAuthorName(manga.author_id) }}</div>
+            <div class="manga-info">Géneros: {{ formatGenres(manga.genres) }}</div>
+            <div class="manga-info">Fecha: {{ manga.release_date | date:'mediumDate' }}</div>
+            
+            <div *ngIf="expandedMangaId === manga.id" class="synopsis">
+              <p>{{ manga.synopsis }}</p>
+            </div>
+          </mat-card-content>
+          <mat-card-actions *ngIf="userRole === 'admin'">
+            <button mat-icon-button (click)="navigateToUpdate(manga.id); $event.stopPropagation()" matTooltip="Editar">
+              <mat-icon color="primary">edit</mat-icon>
+            </button>
+            <button mat-icon-button (click)="deleteManga(manga.id); $event.stopPropagation()" matTooltip="Eliminar">
+              <mat-icon color="warn">delete</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- Pestaña Eliminados -->
+    <mat-tab *ngIf="userRole === 'admin'" label="Eliminados ({{deletedMangas.length}})">
+      <div class="cards-grid">
+        <mat-card *ngFor="let manga of deletedMangas" class="manga-card deleted" (click)="toggleExpand(manga.id)">
+          <mat-card-content>
+            <div class="manga-title">{{ manga.title }}</div>
+            <div class="manga-info">Autor: {{ getAuthorName(manga.author_id) }}</div>
+            <div class="manga-info">Géneros: {{ formatGenres(manga.genres) }}</div>
+            
+            <div *ngIf="expandedMangaId === manga.id" class="synopsis">
+              <p>{{ manga.synopsis }}</p>
+            </div>
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-icon-button (click)="restoreManga(manga.id); $event.stopPropagation()" matTooltip="Restaurar">
+              <mat-icon color="accent">restore</mat-icon>
+            </button>
+            <button mat-icon-button (click)="forceDeleteManga(manga.id); $event.stopPropagation()" matTooltip="Eliminar permanentemente">
+              <mat-icon color="warn">delete_forever</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+
+  <!-- Mensaje cuando no hay mangas -->
+  <div *ngIf="!loading && totalItems === 0" class="no-results">
+    <p>No se encontraron mangas</p>
+  </div>
+
+  <!-- Paginación -->
+  <div class="pagination-controls" *ngIf="totalItems > itemsPerPage">
+    <button mat-stroked-button (click)="goToPage(1)" [disabled]="currentPage === 1">
+      <mat-icon>first_page</mat-icon>
+    </button>
+    <button mat-stroked-button (click)="prevPage()" [disabled]="currentPage === 1">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    
+    <span class="page-info">
+      Página {{ currentPage }} de {{ totalPages }} (Total: {{ totalItems }})
+    </span>
+  
+    <button mat-stroked-button (click)="nextPage()" [disabled]="currentPage === totalPages">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+    <button mat-stroked-button (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages">
+      <mat-icon>last_page</mat-icon>
+    </button>
   </div>
 </div>

@@ -30,8 +30,8 @@ export interface Character {
 })
 export class CharacterService {
   private apiUrl = 'http://127.0.0.1:8000/api/characters'; // URL de la API de personajes
-  private animesUrl = 'http://127.0.0.1:8000/api/animes'; // URL de la API de animes
-  private mangasUrl = 'http://127.0.0.1:8000/api/mangas'; // URL de la API de mangas
+  private animesUrl = 'http://127.0.0.1:8000/api/animes'; // Nueva ruta sin paginación
+  private mangasUrl = 'http://127.0.0.1:8000/api/mangas'; // Nueva ruta sin paginación
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -59,16 +59,36 @@ export class CharacterService {
     return throwError(() => new Error(errorMessage));
   }
 
-  // Obtener todos los personajes (incluyendo eliminados)
   getCharacters(): Observable<Character[]> {
     return this.http.get<Character[]>(this.apiUrl, { headers: this.getHeaders() }).pipe(
       catchError(this.handleError)
     );
   }
 
+  // Obtener personajes CON paginación (nuevo método)
+  getCharactersPaginated(page: number = 1, perPage: number = 10): Observable<{characters: Character[], pagination: any}> {
+    const params = {
+      page: page.toString(),
+      per_page: perPage.toString()
+    };
+
+    return this.http.get<{characters: Character[], pagination: any}>(
+      this.apiUrl, 
+      { 
+        headers: this.getHeaders(),
+        params: params 
+      }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+
   // Obtener un personaje específico por ID
   getCharacter(id: number): Observable<Character> {
-    return this.http.get<Character>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).pipe(
+    return this.http.get<Character>(`${this.apiUrl}/${id}`, { 
+      headers: this.getHeaders() 
+    }).pipe(
       catchError(this.handleError)
     );
   }
@@ -118,17 +138,19 @@ export class CharacterService {
 
   // Obtener la lista de animes
   getAnimes(): Observable<Anime[]> {
-    return this.http.get<Anime[]>(this.animesUrl, { headers: this.getHeaders() }).pipe(
+    return this.http.get<Anime[]>(`${this.animesUrl}/all`, { 
+      headers: this.getHeaders() 
+    }).pipe(
       map((animes: Anime[]) => animes.filter(anime => anime.deleted_at === null)),
       catchError(this.handleError)
     );
   }
-
   // Obtener la lista de mangas
   getMangas(): Observable<Manga[]> {
-    return this.http.get<Manga[]>(this.mangasUrl, { headers: this.getHeaders() }).pipe(
+    return this.http.get<Manga[]>(`${this.mangasUrl}/all`, { 
+      headers: this.getHeaders() 
+    }).pipe(
       map((mangas: Manga[]) => mangas.filter(manga => manga.deleted_at === null)),
-      
       catchError(this.handleError)
     );
   }
